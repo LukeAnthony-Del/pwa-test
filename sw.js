@@ -1,5 +1,5 @@
-const CACHE = "pwa-test-v3";
-const ASSETS = ["./","index.html","manifest.json","icon-192.png","icon-512.png"];
+const CACHE = "pickle-central-v4";
+const ASSETS = ["./","index.html","app.js","manifest.json","icon-192.png","icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)));

@@ -1,7 +1,7 @@
 {
-  "name": "Pickleball Gear",
-  "short_name": "Gear",
-  "description": "Bookings, equipment, purchases, and financial standing",
+  "name": "Pickle Central",
+  "short_name": "Pickle Central",
+  "description": "Pickle Central bookings, credits, and gear",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
