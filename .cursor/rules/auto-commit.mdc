@@ -1,0 +1,8 @@
+---
+description: Commit and push after each edit
+alwaysApply: true
+---
+
+# Auto-commit
+
+After every file edit, commit and push to GitHub without asking. The user gave standing permission. Use a short message that explains why. Skip push if there is no remote. Do not force-push.
