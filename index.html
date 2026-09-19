@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#163326" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PWA Test" />
+    <title>PWA Test</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="icon-192.png" type="image/png" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
+    <style>
+      :root {
+        --bg: #163326;
+        --card: #1f4633;
+        --text: #f4f1e8;
+        --muted: #c5d5c8;
+        --accent: #d6e04f;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        background: radial-gradient(circle at top, #24553c, var(--bg));
+        color: var(--text);
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+      main {
+        width: min(420px, 100%);
+        background: var(--card);
+        border-radius: 24px;
+        padding: 28px 24px;
+        text-align: center;
+      }
+      img.logo {
+        width: 96px;
+        height: 96px;
+        border-radius: 22px;
+      }
+      h1 { margin: 16px 0 8px; font-size: 28px; }
+      p { color: var(--muted); line-height: 1.45; }
+      button {
+        margin-top: 8px;
+        border: 0;
+        border-radius: 999px;
+        padding: 12px 22px;
+        font: inherit;
+        font-weight: 600;
+        background: var(--accent);
+        color: var(--bg);
+        cursor: pointer;
+      }
+      button[hidden] { display: none; }
+      .status { margin-top: 16px; font-size: 14px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img class="logo" src="icon-192.png" alt="PWA Test logo" />
+      <h1>PWA Test</h1>
+      <p>Open this on your phone in Chrome. If install is available, tap the button below. On iPhone Chrome, use the share menu, then Add to Home Screen.</p>
+      <button id="install" hidden>Install app</button>
+      <p class="status" id="status">Checking install status…</p>
+    </main>
+    <script>
+      const status = document.getElementById("status");
+      const installBtn = document.getElementById("install");
+      let deferredPrompt;
+
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("./sw.js");
+      }
+
+      window.addEventListener("beforeinstallprompt", (event) => {
+        event.preventDefault();
+        deferredPrompt = event;
+        installBtn.hidden = false;
+        status.textContent = "Ready to install. Tap Install app.";
+      });
+
+      installBtn.addEventListener("click", async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const result = await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        installBtn.hidden = true;
+        status.textContent =
+          result.outcome === "accepted" ? "Installed. You can open it from your home screen." : "Install was dismissed.";
+      });
+
+      window.addEventListener("appinstalled", () => {
+        installBtn.hidden = true;
+        status.textContent = "Installed. You can open it from your home screen.";
+      });
+
+      if (window.matchMedia("(display-mode: standalone)").matches) {
+        status.textContent = "You are running this as an installed app.";
+      } else if (!window.BeforeInstallPromptEvent && /iPhone|iPad|iPod/.test(navigator.userAgent)) {
+        status.textContent = "On iPhone: Share → Add to Home Screen.";
+      } else {
+        status.textContent = "Visit this page over HTTPS (GitHub Pages). Chrome will offer Install when ready.";
+      }
+    </script>
+  </body>
+</html>
