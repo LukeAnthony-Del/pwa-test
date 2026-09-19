@@ -1,13 +1,13 @@
 {
-  "name": "PWA Test",
-  "short_name": "PWA Test",
-  "description": "A small installable test app",
+  "name": "Pickleball Gear",
+  "short_name": "Gear",
+  "description": "Bookings, equipment, purchases, and financial standing",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#3b1464",
-  "theme_color": "#3b1464",
+  "background_color": "#ffffff",
+  "theme_color": "#1f8a4c",
   "icons": [
     {
       "src": "icon-192.png",
