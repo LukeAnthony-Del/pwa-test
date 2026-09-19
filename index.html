@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#1f8a4c" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Pickle Central" />
+    <title>Pickle Central</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="icon-192.png" type="image/png" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
+    <style>
+      :root {
+        --green: #1f8a4c;
+        --green-dark: #166b3a;
+        --green-soft: #e8f6ee;
+        --white: #ffffff;
+        --ink: #14301f;
+        --muted: #5b7464;
+        --line: #d7e6db;
+        --danger: #c43c3c;
+        --coin: #d4a017;
+        --tab: 76px;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        min-height: 100%;
+        background: var(--white);
+        color: var(--ink);
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        overscroll-behavior-y: contain;
+      }
+      body { padding-top: env(safe-area-inset-top); }
+      .app {
+        min-height: 100vh;
+        padding-bottom: calc(var(--tab) + env(safe-area-inset-bottom) + 8px);
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 18px 10px;
+        border-bottom: 1px solid var(--line);
+        background: var(--white);
+        position: sticky;
+        top: 0;
+        z-index: 4;
+      }
+      header img { width: 40px; height: 40px; border-radius: 10px; }
+      header h1 { margin: 0; font-size: 18px; }
+      header p { margin: 0; color: var(--muted); font-size: 12px; }
+      .page { display: none; padding: 16px 18px 28px; }
+      .page.is-active { display: block; }
+      h2 { margin: 0 0 14px; font-size: 22px; color: var(--green-dark); }
+      h3 { margin: 0 0 10px; font-size: 14px; color: var(--green-dark); letter-spacing: .04em; text-transform: uppercase; }
+      .form { display: grid; gap: 14px; }
+      .field-label { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+      .btn {
+        border: 0;
+        border-radius: 12px;
+        padding: 14px;
+        font: inherit;
+        font-weight: 700;
+        background: var(--green);
+        color: var(--white);
+        width: 100%;
+        cursor: pointer;
+      }
+      .btn.ghost {
+        background: var(--green-soft);
+        color: var(--green-dark);
+      }
+      .btn[hidden] { display: none; }
+      .btn:disabled { opacity: .45; }
+      .card {
+        background: var(--green-soft);
+        border-radius: 14px;
+        padding: 12px 14px;
+      }
+      .person-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+      }
+      .person-row .name { flex: 1; font-weight: 700; }
+      .credits-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-weight: 700;
+        color: var(--green-dark);
+      }
+      .icon-btn {
+        border: 0;
+        background: transparent;
+        color: var(--danger);
+        padding: 6px;
+        cursor: pointer;
+      }
+      .coin {
+        width: 16px;
+        height: 16px;
+        fill: var(--coin);
+        stroke: #9a7510;
+        stroke-width: 1;
+      }
+      .picker {
+        position: relative;
+      }
+      .picker-btn {
+        width: 100%;
+        text-align: left;
+        border: 1px solid var(--line);
+        background: var(--white);
+        color: var(--ink);
+        border-radius: 12px;
+        padding: 12px 14px;
+        font: inherit;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .picker-btn span { color: var(--muted); }
+      .menu {
+        display: none;
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(100% + 6px);
+        background: var(--white);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        box-shadow: 0 12px 30px rgba(20, 48, 31, .12);
+        z-index: 8;
+        overflow: hidden;
+      }
+      .menu.open { display: block; }
+      .menu button, .menu .opt {
+        display: block;
+        width: 100%;
+        text-align: left;
+        border: 0;
+        background: var(--white);
+        padding: 12px 14px;
+        font: inherit;
+        color: var(--ink);
+        border-bottom: 1px solid var(--green-soft);
+      }
+      .menu button:last-child { border-bottom: 0; }
+      .menu button.new { color: var(--green); font-weight: 700; }
+      .new-person {
+        display: none;
+        gap: 8px;
+        padding: 10px;
+      }
+      .new-person.show { display: flex; }
+      .new-person input {
+        flex: 1;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px;
+        font: inherit;
+      }
+      .calendar {
+        padding: 12px;
+      }
+      .cal-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        font-weight: 700;
+        color: var(--green-dark);
+      }
+      .cal-head button {
+        border: 0;
+        background: var(--green-soft);
+        color: var(--green-dark);
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        font: inherit;
+      }
+      .cal-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+        text-align: center;
+        font-size: 13px;
+      }
+      .cal-grid .dow { color: var(--muted); font-size: 11px; padding: 4px 0; }
+      .cal-grid button {
+        border: 0;
+        background: transparent;
+        border-radius: 8px;
+        height: 34px;
+        font: inherit;
+        color: var(--ink);
+      }
+      .cal-grid button.sel { background: var(--green); color: var(--white); font-weight: 700; }
+      .dual {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .equip-col {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 10px;
+      }
+      .choice {
+        display: block;
+        width: 100%;
+        text-align: left;
+        border: 1px solid var(--line);
+        background: var(--white);
+        border-radius: 10px;
+        padding: 10px;
+        margin-top: 8px;
+        font: inherit;
+        color: var(--ink);
+      }
+      .choice.on {
+        border-color: var(--green);
+        background: var(--green-soft);
+        color: var(--green-dark);
+        font-weight: 700;
+      }
+      .choice small { display: block; color: var(--muted); font-weight: 600; }
+      .sign-wrap {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        overflow: hidden;
+        background: #fbfefc;
+      }
+      #sign {
+        display: block;
+        width: 100%;
+        height: 160px;
+        touch-action: none;
+      }
+      .bill {
+        background: var(--green-soft);
+        border-radius: 14px;
+        padding: 14px;
+        display: flex;
+        justify-content: space-between;
+        font-weight: 700;
+      }
+      .error {
+        color: var(--danger);
+        min-height: 1.2em;
+        margin: 0;
+        font-size: 14px;
+      }
+      .pack-edit {
+        display: grid;
+        grid-template-columns: 1fr 80px 90px auto;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .pack-edit input {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px;
+        font: inherit;
+      }
+      .tabs {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        background: var(--white);
+        border-top: 1px solid var(--line);
+        padding-bottom: env(safe-area-inset-bottom);
+        z-index: 5;
+      }
+      .tabs button {
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        padding: 8px 2px 6px;
+        font: inherit;
+        font-size: 9px;
+        font-weight: 700;
+        display: grid;
+        justify-items: center;
+        gap: 3px;
+        cursor: pointer;
+      }
+      .tabs button.is-active { color: var(--green); }
+      .tabs svg { width: 22px; height: 22px; }
+      .empty { color: var(--muted); }
+      .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .stat { border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+      .stat p { margin: 0; color: var(--muted); font-size: 12px; }
+      .stat b { display: block; margin-top: 6px; font-size: 20px; color: var(--green-dark); }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header>
+        <img src="icon-192.png" alt="Pickle Central logo" />
+        <div>
+          <h1>Pickle Central</h1>
+          <p>Credits · bookings · gear</p>
+        </div>
+      </header>
+
+      <section class="page is-active" id="booking">
+        <h2>Add Booking</h2>
+        <form id="booking-form" class="form">
+          <div>
+            <div class="field-label">Customer</div>
+            <div class="picker" id="book-customer"></div>
+          </div>
+          <div>
+            <div class="field-label">Date</div>
+            <div class="picker" id="book-date"></div>
+          </div>
+          <div>
+            <div class="field-label">Equipment rented</div>
+            <div class="dual">
+              <div class="equip-col">
+                <h3>Paddles</h3>
+                <div id="paddle-choices"></div>
+              </div>
+              <div class="equip-col">
+                <h3>Balls</h3>
+                <div id="ball-choices"></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="field-label">Signature</div>
+            <div class="sign-wrap"><canvas id="sign"></canvas></div>
+            <button class="btn ghost" type="button" id="clear-sign" style="margin-top:8px">Clear signature</button>
+          </div>
+          <div class="bill">
+            <span>Total bill</span>
+            <span id="bill-total" class="credits-chip"></span>
+          </div>
+          <p class="error" id="book-error"></p>
+          <button class="btn" type="submit">Confirm and book</button>
+        </form>
+      </section>
+
+      <section class="page" id="equipment">
+        <h2>Equipment Log</h2>
+        <div id="equipment-list"></div>
+      </section>
+
+      <section class="page" id="credits">
+        <h2>Credits</h2>
+        <div id="people-list"></div>
+        <form id="credit-form" class="form" style="margin-top:16px">
+          <div>
+            <div class="field-label">Name</div>
+            <div class="picker" id="credit-name"></div>
+          </div>
+          <div>
+            <div class="field-label">Date</div>
+            <div class="picker" id="credit-date"></div>
+          </div>
+          <div>
+            <div class="field-label">Credit pack</div>
+            <div class="picker" id="credit-pack"></div>
+          </div>
+          <div>
+            <div class="field-label">Memo (optional)</div>
+            <input id="credit-memo" placeholder="Note…" style="width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit" />
+          </div>
+          <button class="btn" type="submit">Add credits</button>
+        </form>
+      </section>
+
+      <section class="page" id="finance">
+        <h2>Financial Standing</h2>
+        <div class="stats">
+          <div class="stat"><p>Credit sales</p><b id="fin-sales">$0.00</b></div>
+          <div class="stat"><p>Credits outstanding</p><b id="fin-out">0</b></div>
+          <div class="stat"><p>Credits used</p><b id="fin-used">0</b></div>
+          <div class="stat"><p>Bookings</p><b id="fin-books">0</b></div>
+        </div>
+        <button class="btn" id="install" hidden style="margin-top:14px">Install app</button>
+        <p class="empty" id="status"></p>
+      </section>
+
+      <section class="page" id="settings">
+        <h2>Settings</h2>
+        <div class="card">
+          <h3>Products</h3>
+          <p class="empty" style="margin:0 0 10px">Edit the price and credit amount for each pack.</p>
+          <div id="pack-list"></div>
+          <button class="btn ghost" type="button" id="add-pack">Add pack</button>
+        </div>
+      </section>
+
+      <nav class="tabs" aria-label="Main">
+        <button class="is-active" data-tab="booking">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" /></svg>
+          Add Booking
+        </button>
+        <button data-tab="equipment">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M7 4h7.2c1.4 0 2.2.9 2.2 2.1V14c0 3-2.4 4.6-5.1 4.6H9.2C6.7 18.6 5 17 5 14.4V6.2C5 4.9 5.8 4 7 4z" />
+            <circle cx="17.6" cy="7.2" r="3.1" fill="#1f8a4c" />
+            <circle cx="7.8" cy="19.4" r="2.2" />
+          </svg>
+          Equipment Log
+        </button>
+        <button data-tab="credits">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#d4a017" stroke="#9a7510" /><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">C</text></svg>
+          Credits
+        </button>
+        <button data-tab="finance">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="4" y="5" width="16" height="14" rx="2" />
+            <path d="M8 10h8M8 14h5" />
+          </svg>
+          Financial Standing
+        </button>
+        <button data-tab="settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c.3.6.9 1 1.5 1H21a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.5 1z" />
+          </svg>
+          Settings
+        </button>
+      </nav>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>
