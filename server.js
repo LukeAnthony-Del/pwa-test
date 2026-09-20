@@ -14,8 +14,11 @@ const types = {
 
 http
   .createServer((req, res) => {
-    const urlPath = req.url === "/" ? "/index.html" : req.url.split("?")[0];
-    const file = path.join(root, path.normalize(urlPath).replace(/^(\.\.[/\\])+/, ""));
+    let urlPath = req.url === "/" ? "/index.html" : req.url.split("?")[0];
+    let file = path.join(root, path.normalize(urlPath).replace(/^(\.\.[/\\])+/, ""));
+    if (fs.existsSync(file) && fs.statSync(file).isDirectory()) {
+      file = path.join(file, "index.html");
+    }
     fs.readFile(file, (err, data) => {
       if (err) {
         res.writeHead(404);
