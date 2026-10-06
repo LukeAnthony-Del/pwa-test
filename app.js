@@ -8,6 +8,7 @@ const BALLS = [
   { id: "b1", label: "One pickleball set", credits: 3 },
   { id: "b2", label: "Two pickleball sets", credits: 5 },
   { id: "b3", label: "Three ball sets", credits: 7 },
+  { id: "b4", label: "Selkirk™ Pro S1 Pickleballs (Cost 5 Credits)", credits: 5 },
 ];
 const defaultState = () => ({
   people: [],
@@ -23,6 +24,8 @@ const defaultState = () => ({
     { name: "Outdoor balls", qty: 40, notes: "Yellow" },
     { name: "Nets", qty: 2, notes: "Court 1 & 2" },
   ],
+  terms:
+    "Equipment rented from Pickle Central stays our property and must be returned at the end of the booking. Credits are charged at the rates shown when you confirm. You are responsible for loss or damage beyond normal wear. Your signature confirms you have read these terms and agree to them.",
 });
 
 function uid() {
@@ -30,7 +33,10 @@ function uid() {
 }
 function load() {
   try {
-    return { ...defaultState(), ...JSON.parse(localStorage.getItem(KEY) || "{}") };
+    const saved = JSON.parse(localStorage.getItem(KEY) || "{}");
+    const next = { ...defaultState(), ...saved };
+    if (typeof saved.terms !== "string") next.terms = defaultState().terms;
+    return next;
   } catch {
     return defaultState();
   }
@@ -264,7 +270,7 @@ function renderChoices() {
     document.getElementById(id).innerHTML = options
       .map(
         (o) => `<button type="button" class="choice ${selected === o.id ? "on" : ""}" data-id="${o.id}">
-          ${o.label}<small>${COIN}${o.credits} credits</small>
+          <span class="choice-name">${o.label}</span><small>${o.credits} credits</small>
         </button>`
       )
       .join("");
@@ -309,11 +315,18 @@ function renderPickers() {
   packPicker(document.getElementById("credit-pack"));
 }
 
+function renderTerms() {
+  const editor = document.getElementById("terms-editor");
+  if (document.activeElement === editor) return;
+  editor.value = state.terms || "";
+}
+
 function render() {
   renderPeople();
   renderEquipment();
   renderFinance();
   renderPacks();
+  renderTerms();
   renderChoices();
   renderPickers();
   updateBill();
@@ -360,7 +373,7 @@ function sizeCanvas() {
   canvas.width = rect.width * devicePixelRatio;
   canvas.height = 160 * devicePixelRatio;
   ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
-  ctx.strokeStyle = "#14301f";
+  ctx.strokeStyle = "#142141";
   ctx.lineWidth = 2.4;
   ctx.lineCap = "round";
 }
@@ -374,6 +387,7 @@ function pos(e) {
   return { x: p.clientX - r.left, y: p.clientY - r.top };
 }
 function start(e) {
+  if (document.getElementById("sign-block").classList.contains("is-locked")) return;
   e.preventDefault();
   drawing = true;
   const { x, y } = pos(e);
@@ -400,6 +414,35 @@ document.getElementById("clear-sign").addEventListener("click", () => {
   signed = false;
 });
 
+function setSignEnabled(on) {
+  document.getElementById("sign-block").classList.toggle("is-locked", !on);
+  document.getElementById("clear-sign").disabled = !on;
+  if (!on) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    signed = false;
+  }
+}
+
+document.getElementById("agree-terms").addEventListener("change", () => {
+  setSignEnabled(document.getElementById("agree-terms").checked);
+});
+
+const termsModal = document.getElementById("terms-modal");
+document.getElementById("open-terms").addEventListener("click", () => {
+  document.getElementById("terms-body").textContent = state.terms || "";
+  termsModal.hidden = false;
+});
+document.getElementById("terms-close").addEventListener("click", () => {
+  termsModal.hidden = true;
+});
+termsModal.addEventListener("click", (event) => {
+  if (event.target === termsModal) termsModal.hidden = true;
+});
+document.getElementById("terms-editor").addEventListener("input", () => {
+  state.terms = document.getElementById("terms-editor").value;
+  save();
+});
+
 document.getElementById("booking-form").addEventListener("submit", (event) => {
   event.preventDefault();
   const person = state.people.find((p) => p.id === document.getElementById("book-customer").dataset.id);
@@ -415,6 +458,10 @@ document.getElementById("booking-form").addEventListener("submit", (event) => {
   }
   if (person.credits < total) {
     err.textContent = `${person.name} only has ${person.credits} credits remaining.`;
+    return;
+  }
+  if (!document.getElementById("agree-terms").checked) {
+    err.textContent = "Please agree to the terms and conditions.";
     return;
   }
   if (!signed) {
@@ -435,7 +482,8 @@ document.getElementById("booking-form").addEventListener("submit", (event) => {
   save();
   paddleId = "";
   ballId = "";
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  document.getElementById("agree-terms").checked = false;
+  setSignEnabled(false);
   signed = false;
   err.textContent = "";
   render();
