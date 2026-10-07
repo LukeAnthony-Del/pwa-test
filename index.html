@@ -418,6 +418,8 @@
         resize: vertical;
       }
       #damage-form { overflow: auto; display: grid; gap: 10px; }
+      #booked-modal { align-items: center; }
+      #booked-modal h2 { text-align: center; }
       .subhead { margin: 12px 0 8px; font-size: 13px; font-weight: 700; }
       .tabs {
         position: fixed;
@@ -616,6 +618,13 @@
         </button>
       </nav>
     </div>
+    <div class="modal" id="booked-modal" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="booked-title">
+        <h2 id="booked-title">Successfully booked</h2>
+        <button class="btn" type="button" id="booked-ok">OK</button>
+      </div>
+    </div>
+    <audio id="booked-sound" src="success.mp3" preload="auto"></audio>
     <div class="modal" id="damage-modal" hidden>
       <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="damage-title">
         <h2 id="damage-title">Missing or damaged gear</h2>

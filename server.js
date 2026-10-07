@@ -11,6 +11,7 @@ const types = {
   ".json": "application/json",
   ".png": "image/png",
   ".woff2": "font/woff2",
+  ".mp3": "audio/mpeg",
 };
 
 http

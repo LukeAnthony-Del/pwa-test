@@ -767,7 +767,21 @@ document.getElementById("booking-form").addEventListener("submit", (event) => {
   signed = false;
   err.textContent = "";
   render();
-  alert("Booked.");
+  showBooked();
+});
+
+const bookedModal = document.getElementById("booked-modal");
+const bookedSound = document.getElementById("booked-sound");
+function showBooked() {
+  bookedModal.hidden = false;
+  bookedSound.currentTime = 0;
+  const playing = bookedSound.play();
+  if (playing) playing.catch(() => {});
+}
+document.getElementById("booked-ok").addEventListener("click", () => {
+  bookedModal.hidden = true;
+  bookedSound.pause();
+  bookedSound.currentTime = 0;
 });
 
 document.getElementById("book-customer").addEventListener("change", updateBill);
