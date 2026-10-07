@@ -490,7 +490,7 @@
       }
       .swipe { position: relative; overflow: hidden; border-radius: 14px; margin-bottom: 8px; background: var(--danger); }
       .swipe-bin {
-        position: absolute; right: 0; top: 0; bottom: 0; width: 76px; border: 0;
+        position: absolute; left: 0; top: 0; bottom: 0; width: 76px; border: 0;
         background: var(--danger); color: var(--white); display: grid; place-items: center; cursor: pointer;
       }
       .swipe-front {
@@ -498,7 +498,7 @@
         background: var(--navy-soft); border-radius: 14px; padding: 12px 14px; min-height: 58px;
         transform: translateX(0); transition: transform .18s ease; touch-action: pan-y;
       }
-      .swipe.is-open .swipe-front { transform: translateX(-76px); }
+      .swipe.is-open .swipe-front { transform: translateX(76px); }
     </style>
   </head>
   <body>
@@ -602,8 +602,8 @@
 
       <section class="page" id="expenses">
         <div class="exp-bar">
-          <button class="btn ghost" type="button" id="add-expense">Add expense</button>
           <button class="back-btn" type="button" id="expenses-back" aria-label="Back">←</button>
+          <button class="btn ghost" type="button" id="add-expense">Add expense</button>
         </div>
         <h2>Expenses</h2>
         <div class="stat wide" style="margin-bottom:14px"><p>Total expenses</p><b id="exp-total">€0.00</b></div>

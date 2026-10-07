@@ -342,8 +342,8 @@ function bindSwipe(row) {
       }
       horizontal = true;
     }
-    const base = row.classList.contains("is-open") ? -76 : 0;
-    const next = Math.min(12, Math.max(-96, base + mx));
+    const base = row.classList.contains("is-open") ? 76 : 0;
+    const next = Math.max(-12, Math.min(96, base + mx));
     dx = mx;
     front.style.transform = `translateX(${next}px)`;
   });
@@ -352,8 +352,8 @@ function bindSwipe(row) {
     dragging = false;
     front.style.transition = "";
     front.style.transform = "";
-    const base = row.classList.contains("is-open") ? -76 : 0;
-    row.classList.toggle("is-open", base + dx < -36);
+    const base = row.classList.contains("is-open") ? 76 : 0;
+    row.classList.toggle("is-open", base + dx > 36);
     dx = 0;
     horizontal = false;
   }
