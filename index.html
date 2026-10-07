@@ -286,7 +286,7 @@
         border-color: var(--navy);
         box-shadow: 0 0 0 3px rgba(20, 33, 65, 0.14);
       }
-      .sign-block.is-locked #clear-sign { opacity: 0.4; }
+      .sign-block.is-locked .clear-sign { opacity: 0.4; }
       .sign-wrap {
         border: 1px solid var(--line);
         border-radius: 14px;
@@ -335,7 +335,7 @@
         line-height: 1.45;
         font-weight: 500;
       }
-      #sign {
+      .sign-canvas {
         display: block;
         width: 100%;
         height: 160px;
@@ -406,8 +406,8 @@
       .stock-row input { width: 88px; text-align: center; }
       .review-body { flex: 1; min-width: 0; }
       .review-body b { display: block; font-size: 16px; }
-      .review-swipe .swipe-front { align-items: center; background: var(--white); }
-      .review-swipe.is-pending .swipe-front { background: #fde8e8; box-shadow: inset 0 0 0 1.5px var(--danger); }
+      .review-swipe .swipe-front { align-items: center; background: var(--white); border: 2px solid var(--navy); }
+      .review-swipe.is-pending .swipe-front { background: #fde8e8; border: 2px solid var(--danger); box-shadow: none; }
       .review-swipe.is-pending .review-body b,
       .review-swipe.is-pending .review-meta { color: var(--danger); }
       .review-go { width: auto; padding: 8px 12px; flex: none; }
@@ -475,7 +475,7 @@
         right: 0;
         bottom: 0;
         display: grid;
-        grid-template-columns: repeat(6, 1fr);
+        grid-template-columns: repeat(5, 1fr);
         background: var(--white);
         border-top: 1px solid var(--line);
         padding-bottom: env(safe-area-inset-bottom);
@@ -496,7 +496,7 @@
         gap: 3px;
         cursor: pointer;
       }
-      .tabs button.is-active { color: var(--navy); }
+      .tabs button.is-active { color: var(--navy); background: #c5e0ff; }
       .tabs svg { width: 22px; height: 22px; }
       .empty { color: var(--muted); }
       .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -561,8 +561,8 @@
           </div>
           <div class="sign-block is-locked" id="sign-block">
             <div class="field-label">Signature</div>
-            <div class="sign-wrap"><canvas id="sign"></canvas></div>
-            <button class="btn ghost" type="button" id="clear-sign" disabled style="margin-top:8px">Clear signature</button>
+            <div class="sign-wrap"><canvas class="sign-canvas" id="sign"></canvas></div>
+            <button class="btn ghost clear-sign" type="button" id="clear-sign" disabled style="margin-top:8px">Clear signature</button>
           </div>
           <div class="bill">
             <div class="bill-who" id="bill-who">Select a customer</div>
@@ -573,12 +573,6 @@
           <p class="error" id="book-error"></p>
           <button class="btn" type="submit">Confirm and book</button>
         </form>
-      </section>
-
-      <section class="page" id="equipment">
-        <h2>Equipment Log</h2>
-        <p class="empty" style="margin-top:0">Update how many of each item are in stock.</p>
-        <div id="equipment-list"></div>
       </section>
 
       <section class="page" id="reviews">
@@ -606,6 +600,16 @@
             <div class="field-label">Memo (optional)</div>
             <input id="credit-memo" placeholder="Note…" style="width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit" />
           </div>
+          <div class="agree">
+            <input id="agree-credit-terms" type="checkbox" aria-label="I have read and agreed to the terms and conditions" />
+            <p>I have read and agreed to the <button type="button" class="terms-link" id="open-credit-terms">terms and conditions</button></p>
+          </div>
+          <div class="sign-block is-locked" id="credit-sign-block">
+            <div class="field-label">Signature</div>
+            <div class="sign-wrap"><canvas class="sign-canvas" id="credit-sign"></canvas></div>
+            <button class="btn ghost clear-sign" type="button" id="clear-credit-sign" disabled style="margin-top:8px">Clear signature</button>
+          </div>
+          <p class="error" id="credit-error"></p>
           <button class="btn" type="submit">Add credits</button>
         </form>
       </section>
@@ -663,9 +667,14 @@
           <button class="btn ghost" type="button" id="add-question">Add question</button>
         </div>
         <div class="card settings-card">
-          <h3>Terms and conditions</h3>
+          <h3>Booking terms</h3>
           <p class="empty" style="margin:0 0 10px">This text appears when someone opens the terms on a booking.</p>
           <textarea id="terms-editor" class="terms-editor"></textarea>
+        </div>
+        <div class="card settings-card">
+          <h3>Buy Credits terms</h3>
+          <p class="empty" style="margin:0 0 10px">This text appears when someone opens the terms on Buy Credits.</p>
+          <textarea id="credit-terms-editor" class="terms-editor"></textarea>
         </div>
         <button class="btn danger reset-all" type="button" id="reset-all">Reset all</button>
       </section>
@@ -681,13 +690,6 @@
             <path d="M4 6h.01M4 12h.01M4 18h.01" />
           </svg>
           Review Bookings
-        </button>
-        <button data-tab="equipment">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M7 3.2h7.1c2.6 0 4.7 2.1 4.7 4.8S16.7 13 14.1 13h-1.6l.8 7c.1.9-.6 1.6-1.4 1.6h-.7c-.8 0-1.5-.7-1.4-1.6l.8-7H7C4.5 13 2.5 11 2.5 8.4S4.4 3.2 7 3.2z" />
-            <circle cx="10.6" cy="7.4" r="1.15" fill="#fff" />
-          </svg>
-          Equipment Log
         </button>
         <button data-tab="credits">
           <img class="tab-coin" src="credit-icon.png" alt="" />

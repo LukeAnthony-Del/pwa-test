@@ -31,6 +31,8 @@ const defaultState = () => ({
   expenses: [],
   terms:
     "Equipment rented from Pickle Central stays our property and must be returned at the end of the booking. Credits are charged at the rates shown when you confirm. You are responsible for loss or damage beyond normal wear. Your signature confirms you have read these terms and agree to them.",
+  creditTerms:
+    "Credits bought from Pickle Central are for equipment rental at the rates shown. They are not cash. Your signature confirms you have read these terms and agree to them.",
 });
 
 function uid() {
@@ -41,6 +43,7 @@ function load() {
     const saved = JSON.parse(localStorage.getItem(KEY) || "{}");
     const next = { ...defaultState(), ...saved };
     if (typeof saved.terms !== "string") next.terms = defaultState().terms;
+    if (typeof saved.creditTerms !== "string") next.creditTerms = defaultState().creditTerms;
     if (!Array.isArray(saved.paddles)) next.paddles = defaultPaddles();
     if (!Array.isArray(saved.balls)) next.balls = defaultBalls();
     if (!Array.isArray(saved.damageQuestions)) next.damageQuestions = defaultQuestions();
@@ -231,28 +234,6 @@ function renderPeople() {
       state.people = state.people.filter((p) => p.id !== person.id);
       save();
       render();
-    });
-  });
-}
-
-function renderEquipment() {
-  const box = document.getElementById("equipment-list");
-  if (box.contains(document.activeElement)) return;
-  box.innerHTML = state.equipment
-    .map(
-      (item) => `<article class="stock-row card">
-        <span class="name">${esc(item.name)}</span>
-        <input type="number" min="0" step="1" value="${Number(item.qty) || 0}" data-stock="${esc(item.id)}" aria-label="${esc(item.name)} in stock" />
-      </article>`
-    )
-    .join("");
-  box.querySelectorAll("[data-stock]").forEach((input) => {
-    input.addEventListener("change", () => {
-      const item = state.equipment.find((row) => row.id === input.dataset.stock);
-      if (!item) return;
-      item.qty = Math.max(0, Number(input.value) || 0);
-      input.value = item.qty;
-      save();
     });
   });
 }
@@ -646,13 +627,13 @@ function renderPickers() {
 
 function renderTerms() {
   const editor = document.getElementById("terms-editor");
-  if (document.activeElement === editor) return;
-  editor.value = state.terms || "";
+  if (document.activeElement !== editor) editor.value = state.terms || "";
+  const creditEditor = document.getElementById("credit-terms-editor");
+  if (document.activeElement !== creditEditor) creditEditor.value = state.creditTerms || "";
 }
 
 function render() {
   renderPeople();
-  renderEquipment();
   renderFinance();
   renderPacks();
   renderCatalog("paddle-list", state.paddles, "paddles");
@@ -690,100 +671,93 @@ document.getElementById("add-question").addEventListener("click", () => {
   render();
 });
 
-document.getElementById("credit-form").addEventListener("submit", (event) => {
-  event.preventDefault();
-  const nameRoot = document.getElementById("credit-name");
-  const pack = state.packs.find((p) => p.id === document.getElementById("credit-pack").dataset.id);
-  let person = state.people.find((p) => p.id === nameRoot.dataset.id);
-  if (!person) {
-    alert("Choose or add a person.");
-    return;
+document.getElementById("credit-form").addEventListener("submit", submitCreditPurchase);
+
+function bindPad(canvasId, blockId, clearId) {
+  const canvas = document.getElementById(canvasId);
+  const block = document.getElementById(blockId);
+  const clearBtn = document.getElementById(clearId);
+  const ctx = canvas.getContext("2d");
+  let drawing = false;
+  let signed = false;
+  function size() {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width < 2) return;
+    canvas.width = rect.width * devicePixelRatio;
+    canvas.height = 160 * devicePixelRatio;
+    ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+    ctx.strokeStyle = "#142141";
+    ctx.lineWidth = 2.4;
+    ctx.lineCap = "round";
   }
-  if (!pack) {
-    alert("Choose a credit pack in Settings first.");
-    return;
+  function pos(event) {
+    const rect = canvas.getBoundingClientRect();
+    const point = event.touches ? event.touches[0] : event;
+    return { x: point.clientX - rect.left, y: point.clientY - rect.top };
   }
-  person.credits += Number(pack.credits);
-  state.sales.push({
-    id: uid(),
-    personId: person.id,
-    date: document.getElementById("credit-date").dataset.value,
-    packId: pack.id,
-    credits: pack.credits,
-    price: pack.price,
-    memo: document.getElementById("credit-memo").value.trim(),
+  canvas.addEventListener("pointerdown", (event) => {
+    if (block.classList.contains("is-locked")) return;
+    event.preventDefault();
+    drawing = true;
+    const { x, y } = pos(event);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
   });
-  save();
-  document.getElementById("credit-memo").value = "";
-  render();
-});
-
-const canvas = document.getElementById("sign");
-const ctx = canvas.getContext("2d");
-function sizeCanvas() {
-  const rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width * devicePixelRatio;
-  canvas.height = 160 * devicePixelRatio;
-  ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
-  ctx.strokeStyle = "#142141";
-  ctx.lineWidth = 2.4;
-  ctx.lineCap = "round";
-}
-sizeCanvas();
-window.addEventListener("resize", sizeCanvas);
-let drawing = false;
-let signed = false;
-function pos(e) {
-  const r = canvas.getBoundingClientRect();
-  const p = e.touches ? e.touches[0] : e;
-  return { x: p.clientX - r.left, y: p.clientY - r.top };
-}
-function start(e) {
-  if (document.getElementById("sign-block").classList.contains("is-locked")) return;
-  e.preventDefault();
-  drawing = true;
-  const { x, y } = pos(e);
-  ctx.beginPath();
-  ctx.moveTo(x, y);
-}
-function move(e) {
-  if (!drawing) return;
-  e.preventDefault();
-  const { x, y } = pos(e);
-  ctx.lineTo(x, y);
-  ctx.stroke();
-  signed = true;
-}
-function end() {
-  drawing = false;
-}
-canvas.addEventListener("pointerdown", start);
-canvas.addEventListener("pointermove", move);
-canvas.addEventListener("pointerup", end);
-canvas.addEventListener("pointerleave", end);
-document.getElementById("clear-sign").addEventListener("click", () => {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  signed = false;
-});
-
-function setSignEnabled(on) {
-  document.getElementById("sign-block").classList.toggle("is-locked", !on);
-  document.getElementById("clear-sign").disabled = !on;
-  if (!on) {
+  canvas.addEventListener("pointermove", (event) => {
+    if (!drawing) return;
+    event.preventDefault();
+    const { x, y } = pos(event);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    signed = true;
+  });
+  canvas.addEventListener("pointerup", () => {
+    drawing = false;
+  });
+  canvas.addEventListener("pointerleave", () => {
+    drawing = false;
+  });
+  clearBtn.addEventListener("click", () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     signed = false;
-  }
+  });
+  return {
+    isSigned: () => signed,
+    dataURL: () => canvas.toDataURL(),
+    size,
+    setEnabled(on) {
+      block.classList.toggle("is-locked", !on);
+      clearBtn.disabled = !on;
+      if (!on) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        signed = false;
+      }
+    },
+  };
 }
 
+const bookPad = bindPad("sign", "sign-block", "clear-sign");
+const creditPad = bindPad("credit-sign", "credit-sign-block", "clear-credit-sign");
+window.addEventListener("resize", () => {
+  if (document.getElementById("booking").classList.contains("is-active")) bookPad.size();
+  if (document.getElementById("credits").classList.contains("is-active")) creditPad.size();
+});
+
 document.getElementById("agree-terms").addEventListener("change", () => {
-  setSignEnabled(document.getElementById("agree-terms").checked);
+  bookPad.setEnabled(document.getElementById("agree-terms").checked);
+});
+document.getElementById("agree-credit-terms").addEventListener("change", () => {
+  creditPad.setEnabled(document.getElementById("agree-credit-terms").checked);
+  if (document.getElementById("credits").classList.contains("is-active")) creditPad.size();
 });
 
 const termsModal = document.getElementById("terms-modal");
-document.getElementById("open-terms").addEventListener("click", () => {
-  document.getElementById("terms-body").textContent = state.terms || "";
+function openTerms(text) {
+  document.getElementById("terms-body").textContent = text || "";
   termsModal.hidden = false;
-});
+}
+document.getElementById("open-terms").addEventListener("click", () => openTerms(state.terms));
+document.getElementById("open-credit-terms").addEventListener("click", () => openTerms(state.creditTerms));
 document.getElementById("terms-close").addEventListener("click", () => {
   termsModal.hidden = true;
 });
@@ -839,35 +813,46 @@ document.getElementById("terms-editor").addEventListener("input", () => {
   state.terms = document.getElementById("terms-editor").value;
   save();
 });
+document.getElementById("credit-terms-editor").addEventListener("input", () => {
+  state.creditTerms = document.getElementById("credit-terms-editor").value;
+  save();
+});
+
+function shake(button) {
+  button.classList.remove("shake");
+  void button.offsetWidth;
+  button.classList.add("shake");
+}
 
 document.getElementById("booking-form").addEventListener("submit", (event) => {
   event.preventDefault();
   const person = state.people.find((p) => p.id === document.getElementById("book-customer").dataset.id);
   const total = bookingTotal();
   const err = document.getElementById("book-error");
+  const button = document.querySelector("#booking-form [type=submit]");
   if (!person) {
     err.textContent = "Select a customer with credits.";
-    shakeSubmit();
+    shake(button);
     return;
   }
   if (!paddleId && !ballId) {
     err.textContent = "Select paddles or balls to rent.";
-    shakeSubmit();
+    shake(button);
     return;
   }
   if (person.credits < total) {
     err.textContent = `${person.name} only has ${person.credits} credits remaining.`;
-    shakeSubmit();
+    shake(button);
     return;
   }
   if (!document.getElementById("agree-terms").checked) {
     err.textContent = "Please agree to the terms and conditions.";
-    shakeSubmit();
+    shake(button);
     return;
   }
-  if (!signed) {
+  if (!bookPad.isSigned()) {
     err.textContent = "Customer signature is required.";
-    shakeSubmit();
+    shake(button);
     return;
   }
   person.credits -= total;
@@ -883,23 +868,74 @@ document.getElementById("booking-form").addEventListener("submit", (event) => {
     missing: [],
     damageAnswers: [],
     credits: total,
-    signature: canvas.toDataURL(),
+    signature: bookPad.dataURL(),
   });
   save();
   paddleId = "";
   ballId = "";
   document.getElementById("agree-terms").checked = false;
-  setSignEnabled(false);
-  signed = false;
+  bookPad.setEnabled(false);
   err.textContent = "";
   render();
   askNotify();
-  showBooked();
+  showSuccess("Successfully booked", () => {
+    clearBooking();
+    showTab("finance");
+  });
 });
+
+function submitCreditPurchase(event) {
+  event.preventDefault();
+  const nameRoot = document.getElementById("credit-name");
+  const pack = state.packs.find((p) => p.id === document.getElementById("credit-pack").dataset.id);
+  const person = state.people.find((p) => p.id === nameRoot.dataset.id);
+  const err = document.getElementById("credit-error");
+  const button = document.querySelector("#credit-form [type=submit]");
+  if (!person) {
+    err.textContent = "Choose or add a person.";
+    shake(button);
+    return;
+  }
+  if (!pack) {
+    err.textContent = "Choose a credit pack.";
+    shake(button);
+    return;
+  }
+  if (!document.getElementById("agree-credit-terms").checked) {
+    err.textContent = "Please agree to the terms and conditions.";
+    shake(button);
+    return;
+  }
+  if (!creditPad.isSigned()) {
+    err.textContent = "Customer signature is required.";
+    shake(button);
+    return;
+  }
+  person.credits += Number(pack.credits);
+  state.sales.push({
+    id: uid(),
+    personId: person.id,
+    date: document.getElementById("credit-date").dataset.value,
+    packId: pack.id,
+    credits: pack.credits,
+    price: pack.price,
+    memo: document.getElementById("credit-memo").value.trim(),
+    signature: creditPad.dataURL(),
+  });
+  save();
+  err.textContent = "";
+  showSuccess("Successfully purchased", () => {
+    clearCreditPurchase();
+    showTab("finance");
+  });
+}
 
 const bookedModal = document.getElementById("booked-modal");
 const bookedSound = document.getElementById("booked-sound");
-function showBooked() {
+let afterSuccess = () => {};
+function showSuccess(title, done) {
+  document.getElementById("booked-title").textContent = title;
+  afterSuccess = done;
   bookedModal.hidden = false;
   bookedSound.currentTime = 0;
   const playing = bookedSound.play();
@@ -909,16 +945,10 @@ document.getElementById("booked-ok").addEventListener("click", () => {
   bookedModal.hidden = true;
   bookedSound.pause();
   bookedSound.currentTime = 0;
-  clearBooking();
-  showTab("finance");
+  const done = afterSuccess;
+  afterSuccess = () => {};
+  done();
 });
-
-function shakeSubmit() {
-  const button = document.querySelector("#booking-form [type=submit]");
-  button.classList.remove("shake");
-  void button.offsetWidth;
-  button.classList.add("shake");
-}
 
 function clearBooking() {
   paddleId = "";
@@ -927,10 +957,21 @@ function clearBooking() {
   delete customer.dataset.id;
   delete customer.dataset.label;
   document.getElementById("agree-terms").checked = false;
-  setSignEnabled(false);
-  signed = false;
+  bookPad.setEnabled(false);
   document.getElementById("book-error").textContent = "";
   document.getElementById("book-date").dataset.value = todayISO();
+  render();
+}
+
+function clearCreditPurchase() {
+  const name = document.getElementById("credit-name");
+  delete name.dataset.id;
+  delete name.dataset.label;
+  document.getElementById("credit-memo").value = "";
+  document.getElementById("credit-date").dataset.value = todayISO();
+  document.getElementById("agree-credit-terms").checked = false;
+  creditPad.setEnabled(false);
+  document.getElementById("credit-error").textContent = "";
   render();
 }
 
@@ -938,7 +979,8 @@ function showTab(id) {
   document.querySelectorAll(".tabs button").forEach((tab) => tab.classList.toggle("is-active", tab.dataset.tab === id));
   document.querySelectorAll(".page").forEach((page) => page.classList.toggle("is-active", page.id === id));
   document.querySelector(".app").classList.toggle("no-tabs", id === "expenses");
-  if (id === "booking") sizeCanvas();
+  if (id === "booking") bookPad.size();
+  if (id === "credits") creditPad.size();
   if (id === "reviews") askNotify();
 }
 
