@@ -1,15 +1,20 @@
 const KEY = "pickle-central-v1";
 const COIN = `<svg class="coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" stroke="none">C</text></svg>`;
-const PADDLES = [
+const defaultPaddles = () => [
   { id: "p1", label: "One pickleball paddle", credits: 3 },
   { id: "p2", label: "Two pickleball paddles", credits: 5 },
 ];
-const BALLS = [
+const defaultBalls = () => [
   { id: "b1", label: "One pickleball set", credits: 3 },
   { id: "b2", label: "Two pickleball sets", credits: 5 },
   { id: "b3", label: "Three ball sets", credits: 7 },
   { id: "b4", label: "Selkirk™ Pro S1 Pickleballs (Cost 5 Credits)", credits: 5 },
 ];
+const defaultEquipment = () => [
+  { id: "stock-paddles", name: "Paddles", qty: 12 },
+  { id: "stock-balls", name: "Balls", qty: 40 },
+];
+const defaultQuestions = () => ["What got damaged?", "Describe the damage"];
 const defaultState = () => ({
   people: [],
   packs: [
@@ -19,11 +24,10 @@ const defaultState = () => ({
   ],
   sales: [],
   bookings: [],
-  equipment: [
-    { name: "Paddles", qty: 12, notes: "In shed" },
-    { name: "Outdoor balls", qty: 40, notes: "Yellow" },
-    { name: "Nets", qty: 2, notes: "Court 1 & 2" },
-  ],
+  equipment: defaultEquipment(),
+  paddles: defaultPaddles(),
+  balls: defaultBalls(),
+  damageQuestions: defaultQuestions(),
   terms:
     "Equipment rented from Pickle Central stays our property and must be returned at the end of the booking. Credits are charged at the rates shown when you confirm. You are responsible for loss or damage beyond normal wear. Your signature confirms you have read these terms and agree to them.",
 });
@@ -36,10 +40,25 @@ function load() {
     const saved = JSON.parse(localStorage.getItem(KEY) || "{}");
     const next = { ...defaultState(), ...saved };
     if (typeof saved.terms !== "string") next.terms = defaultState().terms;
+    if (!Array.isArray(saved.paddles)) next.paddles = defaultPaddles();
+    if (!Array.isArray(saved.balls)) next.balls = defaultBalls();
+    if (!Array.isArray(saved.damageQuestions)) next.damageQuestions = defaultQuestions();
+    const source = Array.isArray(saved.equipment) ? saved.equipment : defaultEquipment();
+    next.equipment = source
+      .filter((item) => !/^nets?$/i.test(String(item.name || "").trim()))
+      .map((item) => ({
+        id: item.id || uid(),
+        name: /^outdoor balls$/i.test(String(item.name || "")) ? "Balls" : item.name,
+        qty: Number(item.qty) || 0,
+      }));
+    if (!next.equipment.length) next.equipment = defaultEquipment();
     return next;
   } catch {
     return defaultState();
   }
+}
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
 }
 function save() {
   localStorage.setItem(KEY, JSON.stringify(state));
@@ -47,6 +66,7 @@ function save() {
 let state = load();
 if (!state.packs?.length) state.packs = defaultState().packs;
 if (!state.people) state.people = [];
+save();
 
 function money(n) {
   return `$${Number(n || 0).toFixed(2)}`;
@@ -215,15 +235,31 @@ function renderPeople() {
 }
 
 function renderEquipment() {
-  document.getElementById("equipment-list").innerHTML = state.equipment
-    .map((item) => `<article class="card"><strong>${item.name} · ${item.qty}</strong><span>${item.notes || ""}</span></article>`)
+  const box = document.getElementById("equipment-list");
+  if (box.contains(document.activeElement)) return;
+  box.innerHTML = state.equipment
+    .map(
+      (item) => `<article class="stock-row card">
+        <span class="name">${esc(item.name)}</span>
+        <input type="number" min="0" step="1" value="${Number(item.qty) || 0}" data-stock="${esc(item.id)}" aria-label="${esc(item.name)} in stock" />
+      </article>`
+    )
     .join("");
+  box.querySelectorAll("[data-stock]").forEach((input) => {
+    input.addEventListener("change", () => {
+      const item = state.equipment.find((row) => row.id === input.dataset.stock);
+      if (!item) return;
+      item.qty = Math.max(0, Number(input.value) || 0);
+      input.value = item.qty;
+      save();
+    });
+  });
 }
 
 function renderFinance() {
   const sales = state.sales.reduce((s, x) => s + Number(x.price), 0);
   const outstanding = state.people.reduce((s, p) => s + Number(p.credits), 0);
-  const used = state.bookings.reduce((s, b) => s + Number(b.credits), 0);
+  const used = state.bookings.filter((b) => !b.refunded).reduce((s, b) => s + Number(b.credits), 0);
   document.getElementById("fin-sales").textContent = money(sales);
   document.getElementById("fin-out").innerHTML = `${outstanding}`;
   document.getElementById("fin-used").textContent = String(used);
@@ -262,6 +298,196 @@ function renderPacks() {
   });
 }
 
+function renderCatalog(listId, items, key) {
+  const box = document.getElementById(listId);
+  if (box.contains(document.activeElement)) return;
+  box.innerHTML = items
+    .map(
+      (item) => `<div class="rental-edit" data-id="${esc(item.id)}">
+        <input data-k="label" value="${esc(item.label)}" aria-label="Rental name" />
+        <input data-k="credits" type="number" min="0" value="${Number(item.credits) || 0}" aria-label="Credit cost" />
+        <button type="button" class="icon-btn" data-del-rental="${esc(item.id)}" data-kind="${key}">✕</button>
+      </div>`
+    )
+    .join("");
+  box.querySelectorAll(".rental-edit").forEach((row) => {
+    row.querySelectorAll("input").forEach((input) => {
+      input.addEventListener("change", () => {
+        const item = state[key].find((entry) => entry.id === row.dataset.id);
+        if (!item) return;
+        item[input.dataset.k] = input.dataset.k === "label" ? input.value : Math.max(0, Number(input.value) || 0);
+        if (input.dataset.k === "credits") input.value = item.credits;
+        save();
+        renderChoices();
+        updateBill();
+      });
+    });
+  });
+  box.querySelectorAll("[data-del-rental]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      state[key] = state[key].filter((entry) => entry.id !== btn.dataset.delRental);
+      if (key === "paddles" && paddleId === btn.dataset.delRental) paddleId = "";
+      if (key === "balls" && ballId === btn.dataset.delRental) ballId = "";
+      save();
+      render();
+    });
+  });
+}
+
+function renderQuestions() {
+  const box = document.getElementById("question-list");
+  if (box.contains(document.activeElement)) return;
+  box.innerHTML = state.damageQuestions
+    .map(
+      (question, index) => `<div class="question-edit">
+        <input data-q="${index}" value="${esc(question)}" aria-label="Damage question ${index + 1}" />
+        <button type="button" class="icon-btn" data-del-q="${index}">✕</button>
+      </div>`
+    )
+    .join("");
+  box.querySelectorAll("[data-q]").forEach((input) => {
+    input.addEventListener("change", () => {
+      state.damageQuestions[Number(input.dataset.q)] = input.value;
+      save();
+    });
+  });
+  box.querySelectorAll("[data-del-q]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      state.damageQuestions.splice(Number(btn.dataset.delQ), 1);
+      save();
+      render();
+    });
+  });
+}
+
+function damageSummary(booking) {
+  if (booking.gearStatus !== "issue") return "";
+  const lines = [];
+  if (booking.missing?.length) lines.push(`Not returned: ${booking.missing.join(", ")}`);
+  (booking.damageAnswers || []).forEach((entry) => {
+    if (String(entry.answer || "").trim()) lines.push(`${entry.question}: ${entry.answer.trim()}`);
+  });
+  return lines.join("\n") || "Some gear was not returned or was damaged.";
+}
+
+function renderReviews() {
+  const box = document.getElementById("review-list");
+  const bookings = [...state.bookings].reverse();
+  if (!bookings.length) {
+    box.innerHTML = `<p class="empty">No bookings yet.</p>`;
+    return;
+  }
+  box.innerHTML = bookings
+    .map((booking) => {
+      const rented = [booking.paddle, booking.balls].filter(Boolean).map((item) => esc(item)).join("<br>");
+      const summary = damageSummary(booking);
+      return `<article class="review">
+        <div class="review-top">
+          <div class="who">
+            <b>${esc(booking.customer)}</b>
+            <div class="review-meta">${esc(formatDate(booking.date))} · ${Number(booking.credits) || 0} credits${booking.refunded ? " · Refunded" : ""}</div>
+          </div>
+          <div class="marks">
+            <button type="button" class="mark ${booking.gearStatus === "ok" ? "on-ok" : ""}" data-ok="${esc(booking.id)}" aria-label="All gear returned with no damage">✓</button>
+            <button type="button" class="mark ${booking.gearStatus === "issue" ? "on-bad" : ""}" data-bad="${esc(booking.id)}" aria-label="Gear missing or damaged">✕</button>
+          </div>
+        </div>
+        <div class="review-rented">${rented || "No gear recorded"}</div>
+        ${booking.gearStatus === "ok" ? `<div class="review-summary">All gear returned, no damage.</div>` : ""}
+        ${summary ? `<div class="review-summary">${esc(summary)}</div>` : ""}
+        <div class="review-actions">
+          <button type="button" class="btn ghost" data-refund="${esc(booking.id)}" ${booking.refunded ? "disabled" : ""}>Refund</button>
+          <button type="button" class="btn danger" data-remove-booking="${esc(booking.id)}">Remove</button>
+        </div>
+      </article>`;
+    })
+    .join("");
+  box.querySelectorAll("[data-ok]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const booking = state.bookings.find((item) => item.id === btn.dataset.ok);
+      if (!booking) return;
+      if (booking.gearStatus === "ok") {
+        booking.gearStatus = "";
+      } else {
+        booking.gearStatus = "ok";
+        booking.missing = [];
+        booking.damageAnswers = [];
+      }
+      save();
+      renderReviews();
+    });
+  });
+  box.querySelectorAll("[data-bad]").forEach((btn) => {
+    btn.addEventListener("click", () => openDamage(btn.dataset.bad));
+  });
+  box.querySelectorAll("[data-refund]").forEach((btn) => {
+    btn.addEventListener("click", () => refundBooking(btn.dataset.refund));
+  });
+  box.querySelectorAll("[data-remove-booking]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const booking = state.bookings.find((item) => item.id === btn.dataset.removeBooking);
+      if (!booking || !confirm(`Remove ${booking.customer}'s booking? Credits stay spent unless you refund first.`)) return;
+      state.bookings = state.bookings.filter((item) => item.id !== booking.id);
+      save();
+      render();
+    });
+  });
+}
+
+function refundBooking(id) {
+  const booking = state.bookings.find((item) => item.id === id);
+  if (!booking || booking.refunded) return;
+  const person = state.people.find((item) => item.id === booking.personId) || state.people.find((item) => item.name === booking.customer);
+  if (!person) {
+    alert("That customer is no longer in Credits, so these credits cannot be returned.");
+    return;
+  }
+  if (!confirm(`Refund ${booking.credits} credits to ${person.name}?`)) return;
+  person.credits += Number(booking.credits) || 0;
+  booking.refunded = true;
+  save();
+  render();
+}
+
+let damageBookingId = "";
+
+function openDamage(id) {
+  const booking = state.bookings.find((item) => item.id === id);
+  if (!booking) return;
+  damageBookingId = id;
+  const items = [booking.paddle, booking.balls].filter(Boolean);
+  const missing = new Set(booking.missing || []);
+  const answers = new Map((booking.damageAnswers || []).map((entry) => [entry.question, entry.answer]));
+  document.getElementById("damage-form").innerHTML = `
+    <div>
+      <div class="field-label">Mark gear that was not returned</div>
+      ${
+        items.length
+          ? items
+              .map(
+                (item) => `<label class="miss-row"><input type="checkbox" data-missing="${esc(item)}" ${missing.has(item) ? "checked" : ""}/> ${esc(item)}</label>`
+              )
+              .join("")
+          : `<p class="empty">No gear was recorded on this booking.</p>`
+      }
+    </div>
+    ${state.damageQuestions
+      .map(
+        (question, index) => `<div>
+          <div class="field-label">${esc(question)}</div>
+          <textarea class="damage-q" data-q="${index}">${esc(answers.get(question) || "")}</textarea>
+        </div>`
+      )
+      .join("")}
+    <p class="error" id="damage-error"></p>`;
+  document.getElementById("damage-modal").hidden = false;
+}
+
+function closeDamage() {
+  document.getElementById("damage-modal").hidden = true;
+  damageBookingId = "";
+}
+
 let paddleId = "";
 let ballId = "";
 
@@ -270,7 +496,7 @@ function renderChoices() {
     document.getElementById(id).innerHTML = options
       .map(
         (o) => `<button type="button" class="choice ${selected === o.id ? "on" : ""}" data-id="${o.id}">
-          <span class="choice-name">${o.label}</span><small>${o.credits} credits</small>
+          <span class="choice-name">${esc(o.label)}</span><small>${o.credits} credits</small>
         </button>`
       )
       .join("");
@@ -282,13 +508,15 @@ function renderChoices() {
       });
     });
   };
-  paint("paddle-choices", PADDLES, paddleId, (v) => (paddleId = v));
-  paint("ball-choices", BALLS, ballId, (v) => (ballId = v));
+  if (!state.paddles.some((item) => item.id === paddleId)) paddleId = "";
+  if (!state.balls.some((item) => item.id === ballId)) ballId = "";
+  paint("paddle-choices", state.paddles, paddleId, (v) => (paddleId = v));
+  paint("ball-choices", state.balls, ballId, (v) => (ballId = v));
 }
 
 function bookingTotal() {
-  const paddle = PADDLES.find((p) => p.id === paddleId);
-  const ball = BALLS.find((b) => b.id === ballId);
+  const paddle = state.paddles.find((p) => p.id === paddleId);
+  const ball = state.balls.find((b) => b.id === ballId);
   return (paddle?.credits || 0) + (ball?.credits || 0);
 }
 
@@ -326,7 +554,11 @@ function render() {
   renderEquipment();
   renderFinance();
   renderPacks();
+  renderCatalog("paddle-list", state.paddles, "paddles");
+  renderCatalog("ball-list", state.balls, "balls");
+  renderQuestions();
   renderTerms();
+  renderReviews();
   renderChoices();
   renderPickers();
   updateBill();
@@ -334,6 +566,24 @@ function render() {
 
 document.getElementById("add-pack").addEventListener("click", () => {
   state.packs.push({ id: uid(), name: "New pack", credits: 5, price: 20 });
+  save();
+  render();
+});
+
+document.getElementById("add-paddle").addEventListener("click", () => {
+  state.paddles.push({ id: uid(), label: "New paddle option", credits: 3 });
+  save();
+  render();
+});
+
+document.getElementById("add-ball").addEventListener("click", () => {
+  state.balls.push({ id: uid(), label: "New ball option", credits: 3 });
+  save();
+  render();
+});
+
+document.getElementById("add-question").addEventListener("click", () => {
+  state.damageQuestions.push("New damage question");
   save();
   render();
 });
@@ -438,6 +688,32 @@ document.getElementById("terms-close").addEventListener("click", () => {
 termsModal.addEventListener("click", (event) => {
   if (event.target === termsModal) termsModal.hidden = true;
 });
+
+const damageModal = document.getElementById("damage-modal");
+document.getElementById("damage-cancel").addEventListener("click", closeDamage);
+document.getElementById("damage-save").addEventListener("click", () => {
+  const booking = state.bookings.find((item) => item.id === damageBookingId);
+  if (!booking) return;
+  const missing = [...document.querySelectorAll("#damage-form [data-missing]:checked")].map((input) => input.dataset.missing);
+  const damageAnswers = state.damageQuestions.map((question, index) => ({
+    question,
+    answer: document.querySelector(`#damage-form [data-q="${index}"]`)?.value.trim() || "",
+  }));
+  const error = document.getElementById("damage-error");
+  if (!missing.length && !damageAnswers.some((entry) => entry.answer)) {
+    error.textContent = "Mark missing gear or answer a damage question.";
+    return;
+  }
+  booking.gearStatus = "issue";
+  booking.missing = missing;
+  booking.damageAnswers = damageAnswers;
+  save();
+  closeDamage();
+  render();
+});
+damageModal.addEventListener("click", (event) => {
+  if (event.target === damageModal) closeDamage();
+});
 document.getElementById("terms-editor").addEventListener("input", () => {
   state.terms = document.getElementById("terms-editor").value;
   save();
@@ -474,8 +750,12 @@ document.getElementById("booking-form").addEventListener("submit", (event) => {
     personId: person.id,
     customer: person.name,
     date: document.getElementById("book-date").dataset.value,
-    paddle: PADDLES.find((p) => p.id === paddleId)?.label || "",
-    balls: BALLS.find((b) => b.id === ballId)?.label || "",
+    paddle: state.paddles.find((p) => p.id === paddleId)?.label || "",
+    balls: state.balls.find((b) => b.id === ballId)?.label || "",
+    refunded: false,
+    gearStatus: "",
+    missing: [],
+    damageAnswers: [],
     credits: total,
     signature: canvas.toDataURL(),
   });

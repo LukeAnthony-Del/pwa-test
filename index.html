@@ -29,7 +29,7 @@
         --danger: #c43c3c;
         --link: #1a5fd0;
         --coin: #d4a017;
-        --tab: 76px;
+        --tab: 86px;
       }
       * { box-sizing: border-box; }
       html, body {
@@ -343,20 +343,89 @@
         align-items: center;
         margin-bottom: 8px;
       }
-      .pack-edit input {
+      .pack-edit input, .rental-edit input, .question-edit input, .stock-row input {
         width: 100%;
         border: 1px solid var(--line);
         border-radius: 10px;
         padding: 10px;
         font: inherit;
+        color: var(--ink);
+        background: var(--white);
       }
+      .rental-edit, .question-edit {
+        display: grid;
+        grid-template-columns: 1fr 72px auto;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .question-edit { grid-template-columns: 1fr auto; }
+      .stock-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+      }
+      .stock-row .name { flex: 1; font-weight: 700; }
+      .stock-row input { width: 88px; text-align: center; }
+      .review {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 12px;
+        margin-bottom: 10px;
+        background: var(--white);
+      }
+      .review-top { display: flex; align-items: flex-start; gap: 8px; }
+      .review-top .who { flex: 1; min-width: 0; }
+      .review-top b { display: block; font-size: 16px; }
+      .review-meta, .review-rented { color: var(--muted); font-size: 13px; margin-top: 4px; }
+      .review-rented { color: var(--ink); }
+      .marks { display: flex; gap: 6px; }
+      .mark {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: var(--white);
+        color: var(--muted);
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .mark.on-ok { background: var(--navy); color: var(--white); border-color: var(--navy); }
+      .mark.on-bad { background: var(--danger); color: var(--white); border-color: var(--danger); }
+      .review-summary {
+        margin-top: 8px;
+        background: var(--navy-soft);
+        border-radius: 10px;
+        padding: 8px 10px;
+        font-size: 13px;
+        white-space: pre-wrap;
+      }
+      .review-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+      .review-actions .btn { padding: 10px; }
+      .btn.danger { background: var(--white); color: var(--danger); border: 1px solid var(--danger); }
+      .miss-row { display: flex; align-items: flex-start; gap: 8px; margin: 6px 0; font-size: 14px; }
+      .miss-row input { margin-top: 3px; accent-color: var(--navy); }
+      .damage-q {
+        width: 100%;
+        min-height: 72px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 10px;
+        font: inherit;
+        color: var(--ink);
+        resize: vertical;
+      }
+      #damage-form { overflow: auto; display: grid; gap: 10px; }
+      .subhead { margin: 12px 0 8px; font-size: 13px; font-weight: 700; }
       .tabs {
         position: fixed;
         left: 0;
         right: 0;
         bottom: 0;
         display: grid;
-        grid-template-columns: repeat(5, 1fr);
+        grid-template-columns: repeat(6, 1fr);
         background: var(--white);
         border-top: 1px solid var(--line);
         padding-bottom: env(safe-area-inset-bottom);
@@ -368,7 +437,9 @@
         color: var(--muted);
         padding: 8px 2px 6px;
         font: inherit;
-        font-size: 9px;
+        font-size: 8px;
+        line-height: 1.15;
+        text-align: center;
         font-weight: 700;
         display: grid;
         justify-items: center;
@@ -430,7 +501,13 @@
 
       <section class="page" id="equipment">
         <h2>Equipment Log</h2>
+        <p class="empty" style="margin-top:0">Update how many of each item are in stock.</p>
         <div id="equipment-list"></div>
+      </section>
+
+      <section class="page" id="reviews">
+        <h2>Review Bookings</h2>
+        <div id="review-list"></div>
       </section>
 
       <section class="page" id="credits">
@@ -478,6 +555,22 @@
           <button class="btn ghost" type="button" id="add-pack">Add pack</button>
         </div>
         <div class="card settings-card">
+          <h3>Rental options</h3>
+          <p class="empty" style="margin:0 0 10px">These choices appear on Add Booking. The number is the credit cost.</p>
+          <div class="subhead">Paddles</div>
+          <div id="paddle-list"></div>
+          <button class="btn ghost" type="button" id="add-paddle">Add paddle option</button>
+          <div class="subhead">Balls</div>
+          <div id="ball-list"></div>
+          <button class="btn ghost" type="button" id="add-ball">Add ball option</button>
+        </div>
+        <div class="card settings-card">
+          <h3>Damage questions</h3>
+          <p class="empty" style="margin:0 0 10px">These questions appear when gear comes back missing or damaged.</p>
+          <div id="question-list"></div>
+          <button class="btn ghost" type="button" id="add-question">Add question</button>
+        </div>
+        <div class="card settings-card">
           <h3>Terms and conditions</h3>
           <p class="empty" style="margin:0 0 10px">This text appears when someone opens the terms on a booking.</p>
           <textarea id="terms-editor" class="terms-editor"></textarea>
@@ -491,11 +584,17 @@
         </button>
         <button data-tab="equipment">
           <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M7 4h7.2c1.4 0 2.2.9 2.2 2.1V14c0 3-2.4 4.6-5.1 4.6H9.2C6.7 18.6 5 17 5 14.4V6.2C5 4.9 5.8 4 7 4z" />
-            <circle cx="17.6" cy="7.2" r="3.1" fill="#142141" />
-            <circle cx="7.8" cy="19.4" r="2.2" />
+            <path d="M7 3.2h7.1c2.6 0 4.7 2.1 4.7 4.8S16.7 13 14.1 13h-1.6l.8 7c.1.9-.6 1.6-1.4 1.6h-.7c-.8 0-1.5-.7-1.4-1.6l.8-7H7C4.5 13 2.5 11 2.5 8.4S4.4 3.2 7 3.2z" />
+            <circle cx="10.6" cy="7.4" r="1.15" fill="#fff" />
           </svg>
           Equipment Log
+        </button>
+        <button data-tab="reviews">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M8 6h11M8 12h11M8 18h11" />
+            <path d="M4 6h.01M4 12h.01M4 18h.01" />
+          </svg>
+          Review Bookings
         </button>
         <button data-tab="credits">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#d4a017" stroke="#9a7510" /><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">C</text></svg>
@@ -516,6 +615,14 @@
           Settings
         </button>
       </nav>
+    </div>
+    <div class="modal" id="damage-modal" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="damage-title">
+        <h2 id="damage-title">Missing or damaged gear</h2>
+        <div id="damage-form"></div>
+        <button class="btn" type="button" id="damage-save">Save</button>
+        <button class="btn ghost" type="button" id="damage-cancel">Cancel</button>
+      </div>
     </div>
     <div class="modal" id="terms-modal" hidden>
       <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="terms-title">
