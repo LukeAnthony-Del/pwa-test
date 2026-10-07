@@ -215,19 +215,15 @@ function renderPeople() {
     box.innerHTML = `<p class="empty">No customers yet. Add credits below.</p>`;
     return;
   }
-  box.innerHTML = state.people
+  box.innerHTML = `<div class="people-grid">${state.people
     .map(
-      (p) => `<div class="person-row card">
-        <span class="name">${p.name}</span>
-        <span class="credits-chip">${COIN}${p.credits}</span>
-        <button type="button" class="icon-btn" data-del="${p.id}" aria-label="Remove ${p.name}">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>
-          </svg>
-        </button>
-      </div>`
+      (p) => `<article class="person-cell">
+        <button type="button" class="icon-btn person-del" data-del="${esc(p.id)}" aria-label="Remove ${esc(p.name)}">✕</button>
+        <div class="name">${esc(p.name)}</div>
+        <div class="credits-chip">${COIN}${p.credits}</div>
+      </article>`
     )
-    .join("");
+    .join("")}</div>`;
   box.querySelectorAll("[data-del]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const person = state.people.find((p) => p.id === btn.dataset.del);
@@ -294,6 +290,7 @@ function renderExpenses() {
         <div class="swipe-front">
           <div>
             <b>${esc(item.name)}</b>
+            ${item.date ? `<div class="review-meta">${esc(formatDate(item.date))}</div>` : ""}
             ${item.memo ? `<div class="review-meta">${esc(item.memo)}</div>` : ""}
           </div>
           <span>${money(item.amount)}</span>
@@ -522,7 +519,7 @@ function refundBooking(id) {
   if (!booking || booking.refunded) return;
   const person = state.people.find((item) => item.id === booking.personId) || state.people.find((item) => item.name === booking.customer);
   if (!person) {
-    alert("That customer is no longer in Credits, so these credits cannot be returned.");
+    alert("That customer is no longer on Buy Credits, so these credits cannot be returned.");
     return;
   }
   person.credits += Number(booking.credits) || 0;
@@ -636,7 +633,7 @@ function updateBill() {
 }
 
 function renderPickers() {
-  namePicker(document.getElementById("credit-name"), { allowNew: true });
+  namePicker(document.getElementById("credit-name"), { allowNew: true, showCredits: false });
   namePicker(document.getElementById("book-customer"), {
     allowNew: false,
     showCredits: false,
@@ -959,6 +956,7 @@ function closeExpense() {
 }
 document.getElementById("add-expense").addEventListener("click", () => {
   document.getElementById("expense-form").reset();
+  datePicker(document.getElementById("exp-date"), todayISO());
   document.getElementById("expense-modal").hidden = false;
   document.getElementById("exp-name").focus();
 });
@@ -971,8 +969,9 @@ document.getElementById("expense-form").addEventListener("submit", (event) => {
   const name = document.getElementById("exp-name").value.trim();
   const amount = Number(document.getElementById("exp-amount").value);
   const memo = document.getElementById("exp-memo").value.trim();
+  const date = document.getElementById("exp-date").dataset.value || todayISO();
   if (!name || document.getElementById("exp-amount").value === "" || !(amount >= 0)) return;
-  state.expenses.unshift({ id: uid(), name, amount, memo });
+  state.expenses.unshift({ id: uid(), name, amount, memo, date });
   save();
   closeExpense();
   renderExpenses();

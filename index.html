@@ -77,13 +77,29 @@
         border-radius: 14px;
         padding: 12px 14px;
       }
-      .person-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 8px;
+      .people-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
       }
-      .person-row .name { flex: 1; font-weight: 700; }
+      .person-cell {
+        position: relative;
+        background: var(--navy-soft);
+        border-radius: 12px;
+        padding: 18px 6px 10px;
+        min-width: 0;
+        text-align: center;
+      }
+      .person-cell .name {
+        font-weight: 700;
+        font-size: 13px;
+        line-height: 1.2;
+        overflow-wrap: anywhere;
+      }
+      .person-cell .credits-chip { justify-content: center; margin-top: 6px; }
+      .person-del { position: absolute; top: 0; right: 0; padding: 4px; }
+      #credit-form { margin-top: 40px; }
+      #exp-date .menu { top: auto; bottom: calc(100% + 6px); }
       .credits-chip {
         display: inline-flex;
         align-items: center;
@@ -571,9 +587,9 @@
       </section>
 
       <section class="page" id="credits">
-        <h2>Credits</h2>
+        <h2>Buy Credits</h2>
         <div id="people-list"></div>
-        <form id="credit-form" class="form" style="margin-top:16px">
+        <form id="credit-form" class="form">
           <div>
             <div class="field-label">Name</div>
             <div class="picker" id="credit-name"></div>
@@ -675,7 +691,7 @@
         </button>
         <button data-tab="credits">
           <img class="tab-coin" src="credit-icon.png" alt="" />
-          Credits
+          Buy Credits
         </button>
         <button class="is-active" data-tab="finance">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -704,9 +720,22 @@
       <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="expense-title">
         <h2 id="expense-title">Add expense</h2>
         <form id="expense-form" class="form">
-          <input id="exp-name" class="text-input" placeholder="Name" aria-label="Name" />
-          <input id="exp-amount" class="text-input" type="number" min="0" step="0.01" placeholder="Amount in euro" aria-label="Amount in euro" />
-          <input id="exp-memo" class="text-input" placeholder="Memo" aria-label="Memo" />
+          <div>
+            <div class="field-label">Expense name</div>
+            <input id="exp-name" class="text-input" placeholder="Expense name" />
+          </div>
+          <div>
+            <div class="field-label">Date paid</div>
+            <div class="picker" id="exp-date"></div>
+          </div>
+          <div>
+            <div class="field-label">Amount in euro</div>
+            <input id="exp-amount" class="text-input" type="number" min="0" step="0.01" placeholder="Amount in euro" />
+          </div>
+          <div>
+            <div class="field-label">Memo</div>
+            <input id="exp-memo" class="text-input" placeholder="Memo" />
+          </div>
           <button class="btn" type="submit">Save expense</button>
         </form>
         <button class="btn ghost" type="button" id="expense-cancel">Cancel</button>
