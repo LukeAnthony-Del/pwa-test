@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#142141" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Pickle Central" />
+    <title>Pickle Central</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="icon-192.png" type="image/png" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
+    <style>
+      @font-face {
+        font-family: "Outfit";
+        font-style: normal;
+        font-weight: 400 700;
+        font-display: swap;
+        src: url("fonts/outfit-latin.woff2") format("woff2");
+      }
+      :root {
+        --navy: #142141;
+        --navy-soft: #f4f7fb;
+        --white: #ffffff;
+        --ink: #142141;
+        --muted: #5c6b82;
+        --line: #d5deea;
+        --danger: #c43c3c;
+        --link: #1a5fd0;
+        --coin: #d4a017;
+        --tab: 86px;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        min-height: 100%;
+        background: var(--white);
+        color: var(--ink);
+        font-family: "Outfit", "Avenir Next", "Segoe UI", sans-serif;
+        font-weight: 500;
+        overscroll-behavior-y: contain;
+      }
+      body { padding-top: env(safe-area-inset-top); }
+      .app {
+        min-height: 100vh;
+        padding-bottom: calc(var(--tab) + env(safe-area-inset-bottom) + 8px);
+      }
+      .page { display: none; padding: 16px 18px 28px; }
+      .page.is-active { display: block; }
+      h2 { margin: 0 0 14px; font-size: 22px; font-weight: 700; letter-spacing: -0.03em; color: var(--navy); }
+      h3 { margin: 0 0 10px; font-size: 14px; color: var(--navy); letter-spacing: .04em; text-transform: uppercase; }
+      .form { display: grid; gap: 14px; }
+      .field-label { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+      .btn {
+        border: 0;
+        border-radius: 12px;
+        padding: 14px;
+        font: inherit;
+        font-weight: 700;
+        background: var(--navy);
+        color: var(--white);
+        width: 100%;
+        cursor: pointer;
+      }
+      .btn.ghost {
+        background: var(--navy-soft);
+        color: var(--navy);
+      }
+      .btn[hidden] { display: none; }
+      .btn:disabled { opacity: .45; }
+      .card {
+        background: var(--navy-soft);
+        border-radius: 14px;
+        padding: 12px 14px;
+      }
+      .person-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+      }
+      .person-row .name { flex: 1; font-weight: 700; }
+      .credits-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-weight: 700;
+        color: var(--navy);
+      }
+      .icon-btn {
+        border: 0;
+        background: transparent;
+        color: var(--danger);
+        padding: 6px;
+        cursor: pointer;
+      }
+      .coin {
+        width: 16px;
+        height: 16px;
+        fill: var(--coin);
+        stroke: #9a7510;
+        stroke-width: 1;
+      }
+      .picker {
+        position: relative;
+      }
+      .picker-btn {
+        width: 100%;
+        text-align: left;
+        border: 1px solid var(--line);
+        background: var(--white);
+        color: var(--ink);
+        border-radius: 12px;
+        padding: 12px 14px;
+        font: inherit;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .picker-btn span { color: var(--muted); }
+      .menu {
+        display: none;
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(100% + 6px);
+        background: var(--white);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        box-shadow: 0 12px 30px rgba(20, 48, 31, .12);
+        z-index: 8;
+        overflow: hidden;
+      }
+      .menu.open { display: block; }
+      .menu button, .menu .opt {
+        display: block;
+        width: 100%;
+        text-align: left;
+        border: 0;
+        background: var(--white);
+        padding: 12px 14px;
+        font: inherit;
+        color: var(--ink);
+        border-bottom: 1px solid var(--navy-soft);
+      }
+      .menu button:last-child { border-bottom: 0; }
+      .menu button.new { color: var(--navy); font-weight: 700; }
+      .new-person {
+        display: none;
+        gap: 8px;
+        padding: 10px;
+      }
+      .new-person.show { display: flex; }
+      .new-person input {
+        flex: 1;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px;
+        font: inherit;
+      }
+      .calendar {
+        padding: 12px;
+      }
+      .cal-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        font-weight: 700;
+        color: var(--navy);
+      }
+      .cal-head button {
+        border: 0;
+        background: var(--navy-soft);
+        color: var(--navy);
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        font: inherit;
+      }
+      .cal-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+        text-align: center;
+        font-size: 13px;
+      }
+      .cal-grid .dow { color: var(--muted); font-size: 11px; padding: 4px 0; }
+      .cal-grid button {
+        border: 0;
+        background: transparent;
+        border-radius: 8px;
+        height: 34px;
+        font: inherit;
+        color: var(--ink);
+      }
+      .cal-grid button.sel { background: var(--navy); color: var(--white); font-weight: 700; }
+      .dual {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .equip-col {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 10px;
+      }
+      .choice {
+        display: block;
+        width: 100%;
+        text-align: left;
+        border: 1px solid var(--line);
+        background: var(--white);
+        border-radius: 10px;
+        padding: 8px 10px;
+        margin-top: 8px;
+        font: inherit;
+        color: var(--ink);
+      }
+      .choice-name {
+        display: block;
+        font-size: 12px;
+        line-height: 1.25;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .choice.on {
+        border-color: var(--navy);
+        background: var(--navy-soft);
+        color: var(--navy);
+        font-weight: 700;
+      }
+      .choice small { display: block; margin-top: 2px; color: var(--muted); font-weight: 600; font-size: 11px; }
+      .agree {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin: 0;
+      }
+      .agree input {
+        width: 18px;
+        height: 18px;
+        margin-top: 1px;
+        flex: none;
+        accent-color: var(--navy);
+      }
+      .agree p { margin: 0; font-size: 14px; line-height: 1.35; }
+      .terms-link {
+        border: 0;
+        background: none;
+        padding: 0;
+        font: inherit;
+        font-weight: 600;
+        color: var(--link);
+        text-decoration: underline;
+        cursor: pointer;
+      }
+      .sign-block.is-locked .sign-wrap {
+        opacity: 0.32;
+        pointer-events: none;
+        background: #e7edf4;
+      }
+      .sign-block:not(.is-locked) .sign-wrap {
+        opacity: 1;
+        background: var(--white);
+        border-color: var(--navy);
+        box-shadow: 0 0 0 3px rgba(20, 33, 65, 0.14);
+      }
+      .sign-block.is-locked #clear-sign { opacity: 0.4; }
+      .sign-wrap {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        overflow: hidden;
+        background: #e7edf4;
+        transition: opacity .2s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
+      }
+      .terms-editor {
+        width: 100%;
+        min-height: 160px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px;
+        font: inherit;
+        color: var(--ink);
+        resize: vertical;
+        margin-bottom: 0;
+      }
+      .settings-card + .settings-card { margin-top: 14px; }
+      .modal {
+        position: fixed;
+        inset: 0;
+        z-index: 30;
+        background: rgba(20, 33, 65, 0.48);
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 16px;
+      }
+      .modal[hidden] { display: none; }
+      .modal-card {
+        width: min(520px, 100%);
+        max-height: min(72vh, 560px);
+        background: var(--white);
+        color: var(--ink);
+        border-radius: 16px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .terms-body {
+        overflow: auto;
+        white-space: pre-wrap;
+        font-size: 14px;
+        line-height: 1.45;
+        font-weight: 500;
+      }
+      #sign {
+        display: block;
+        width: 100%;
+        height: 160px;
+        touch-action: none;
+      }
+      .bill {
+        background: var(--navy-soft);
+        border-radius: 14px;
+        padding: 14px;
+        display: flex;
+        justify-content: space-between;
+        font-weight: 700;
+      }
+      .error {
+        color: var(--danger);
+        min-height: 1.2em;
+        margin: 0;
+        font-size: 14px;
+      }
+      .pack-edit {
+        display: grid;
+        grid-template-columns: 1fr 80px 90px auto;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .pack-edit input, .rental-edit input, .question-edit input, .stock-row input {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px;
+        font: inherit;
+        color: var(--ink);
+        background: var(--white);
+      }
+      .rental-edit, .question-edit {
+        display: grid;
+        grid-template-columns: 1fr 72px auto;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .question-edit { grid-template-columns: 1fr auto; }
+      .stock-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+      }
+      .stock-row .name { flex: 1; font-weight: 700; }
+      .stock-row input { width: 88px; text-align: center; }
+      .review {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 12px;
+        margin-bottom: 10px;
+        background: var(--white);
+      }
+      .review-top { display: flex; align-items: flex-start; gap: 8px; }
+      .review-top .who { flex: 1; min-width: 0; }
+      .review-top b { display: block; font-size: 16px; }
+      .review-meta, .review-rented { color: var(--muted); font-size: 13px; margin-top: 4px; }
+      .review-rented { color: var(--ink); }
+      .marks { display: flex; gap: 6px; }
+      .mark {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: var(--white);
+        color: var(--muted);
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .mark.on-ok { background: var(--navy); color: var(--white); border-color: var(--navy); }
+      .mark.on-bad { background: var(--danger); color: var(--white); border-color: var(--danger); }
+      .review-summary {
+        margin-top: 8px;
+        background: var(--navy-soft);
+        border-radius: 10px;
+        padding: 8px 10px;
+        font-size: 13px;
+        white-space: pre-wrap;
+      }
+      .review-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+      .review-actions .btn { padding: 10px; }
+      .btn.danger { background: var(--white); color: var(--danger); border: 1px solid var(--danger); }
+      .miss-row { display: flex; align-items: flex-start; gap: 8px; margin: 6px 0; font-size: 14px; }
+      .miss-row input { margin-top: 3px; accent-color: var(--navy); }
+      .damage-q {
+        width: 100%;
+        min-height: 72px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 10px;
+        font: inherit;
+        color: var(--ink);
+        resize: vertical;
+      }
+      #damage-form { overflow: auto; display: grid; gap: 10px; }
+      #booked-modal { align-items: center; }
+      #booked-modal h2 { text-align: center; }
+      .subhead { margin: 12px 0 8px; font-size: 13px; font-weight: 700; }
+      .tabs {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        background: var(--white);
+        border-top: 1px solid var(--line);
+        padding-bottom: env(safe-area-inset-bottom);
+        z-index: 5;
+      }
+      .tabs button {
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        padding: 8px 2px 6px;
+        font: inherit;
+        font-size: 8px;
+        line-height: 1.15;
+        text-align: center;
+        font-weight: 700;
+        display: grid;
+        justify-items: center;
+        gap: 3px;
+        cursor: pointer;
+      }
+      .tabs button.is-active { color: var(--navy); }
+      .tabs svg { width: 22px; height: 22px; }
+      .empty { color: var(--muted); }
+      .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .stat { border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+      .stat p { margin: 0; color: var(--muted); font-size: 12px; }
+      .stat b { display: block; margin-top: 6px; font-size: 20px; color: var(--navy); }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <section class="page" id="booking">
+        <h2>Add Booking</h2>
+        <form id="booking-form" class="form">
+          <div>
+            <div class="field-label">Customer</div>
+            <div class="picker" id="book-customer"></div>
+          </div>
+          <div>
+            <div class="field-label">Date</div>
+            <div class="picker" id="book-date"></div>
+          </div>
+          <div>
+            <div class="field-label">Equipment rented</div>
+            <div class="dual">
+              <div class="equip-col">
+                <h3>Paddles</h3>
+                <div id="paddle-choices"></div>
+              </div>
+              <div class="equip-col">
+                <h3>Balls</h3>
+                <div id="ball-choices"></div>
+              </div>
+            </div>
+          </div>
+          <div class="agree">
+            <input id="agree-terms" type="checkbox" aria-label="I have read and agreed to the terms and conditions" />
+            <p>I have read and agreed to the <button type="button" class="terms-link" id="open-terms">terms and conditions</button></p>
+          </div>
+          <div class="sign-block is-locked" id="sign-block">
+            <div class="field-label">Signature</div>
+            <div class="sign-wrap"><canvas id="sign"></canvas></div>
+            <button class="btn ghost" type="button" id="clear-sign" disabled style="margin-top:8px">Clear signature</button>
+          </div>
+          <div class="bill">
+            <span>Total bill</span>
+            <span id="bill-total" class="credits-chip"></span>
+          </div>
+          <p class="error" id="book-error"></p>
+          <button class="btn" type="submit">Confirm and book</button>
+        </form>
+      </section>
+
+      <section class="page" id="equipment">
+        <h2>Equipment Log</h2>
+        <p class="empty" style="margin-top:0">Update how many of each item are in stock.</p>
+        <div id="equipment-list"></div>
+      </section>
+
+      <section class="page" id="reviews">
+        <h2>Review Bookings</h2>
+        <div id="review-list"></div>
+      </section>
+
+      <section class="page" id="credits">
+        <h2>Credits</h2>
+        <div id="people-list"></div>
+        <form id="credit-form" class="form" style="margin-top:16px">
+          <div>
+            <div class="field-label">Name</div>
+            <div class="picker" id="credit-name"></div>
+          </div>
+          <div>
+            <div class="field-label">Date</div>
+            <div class="picker" id="credit-date"></div>
+          </div>
+          <div>
+            <div class="field-label">Credit pack</div>
+            <div class="picker" id="credit-pack"></div>
+          </div>
+          <div>
+            <div class="field-label">Memo (optional)</div>
+            <input id="credit-memo" placeholder="Note…" style="width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit" />
+          </div>
+          <button class="btn" type="submit">Add credits</button>
+        </form>
+      </section>
+
+      <section class="page is-active" id="finance">
+        <h2>Financial Standing</h2>
+        <div class="stats">
+          <div class="stat"><p>Credit sales</p><b id="fin-sales">$0.00</b></div>
+          <div class="stat"><p>Credits outstanding</p><b id="fin-out">0</b></div>
+          <div class="stat"><p>Credits used</p><b id="fin-used">0</b></div>
+          <div class="stat"><p>Bookings</p><b id="fin-books">0</b></div>
+        </div>
+        <button class="btn" id="install" hidden style="margin-top:14px">Install app</button>
+        <p class="empty" id="status"></p>
+      </section>
+
+      <section class="page" id="settings">
+        <h2>Settings</h2>
+        <div class="card settings-card">
+          <h3>Products</h3>
+          <p class="empty" style="margin:0 0 10px">Edit the price and credit amount for each pack.</p>
+          <div id="pack-list"></div>
+          <button class="btn ghost" type="button" id="add-pack">Add pack</button>
+        </div>
+        <div class="card settings-card">
+          <h3>Rental options</h3>
+          <p class="empty" style="margin:0 0 10px">These choices appear on Add Booking. The number is the credit cost.</p>
+          <div class="subhead">Paddles</div>
+          <div id="paddle-list"></div>
+          <button class="btn ghost" type="button" id="add-paddle">Add paddle option</button>
+          <div class="subhead">Balls</div>
+          <div id="ball-list"></div>
+          <button class="btn ghost" type="button" id="add-ball">Add ball option</button>
+        </div>
+        <div class="card settings-card">
+          <h3>Damage questions</h3>
+          <p class="empty" style="margin:0 0 10px">These questions appear when gear comes back missing or damaged.</p>
+          <div id="question-list"></div>
+          <button class="btn ghost" type="button" id="add-question">Add question</button>
+        </div>
+        <div class="card settings-card">
+          <h3>Terms and conditions</h3>
+          <p class="empty" style="margin:0 0 10px">This text appears when someone opens the terms on a booking.</p>
+          <textarea id="terms-editor" class="terms-editor"></textarea>
+        </div>
+      </section>
+
+      <nav class="tabs" aria-label="Main">
+        <button data-tab="booking">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" /></svg>
+          Add Booking
+        </button>
+        <button data-tab="equipment">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M7 3.2h7.1c2.6 0 4.7 2.1 4.7 4.8S16.7 13 14.1 13h-1.6l.8 7c.1.9-.6 1.6-1.4 1.6h-.7c-.8 0-1.5-.7-1.4-1.6l.8-7H7C4.5 13 2.5 11 2.5 8.4S4.4 3.2 7 3.2z" />
+            <circle cx="10.6" cy="7.4" r="1.15" fill="#fff" />
+          </svg>
+          Equipment Log
+        </button>
+        <button data-tab="reviews">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M8 6h11M8 12h11M8 18h11" />
+            <path d="M4 6h.01M4 12h.01M4 18h.01" />
+          </svg>
+          Review Bookings
+        </button>
+        <button data-tab="credits">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#d4a017" stroke="#9a7510" /><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">C</text></svg>
+          Credits
+        </button>
+        <button class="is-active" data-tab="finance">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="4" y="5" width="16" height="14" rx="2" />
+            <path d="M8 10h8M8 14h5" />
+          </svg>
+          Financial Standing
+        </button>
+        <button data-tab="settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c.3.6.9 1 1.5 1H21a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.5 1z" />
+          </svg>
+          Settings
+        </button>
+      </nav>
+    </div>
+    <div class="modal" id="booked-modal" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="booked-title">
+        <h2 id="booked-title">Successfully booked</h2>
+        <button class="btn" type="button" id="booked-ok">OK</button>
+      </div>
+    </div>
+    <audio id="booked-sound" src="success.mp3" preload="auto"></audio>
+    <div class="modal" id="damage-modal" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="damage-title">
+        <h2 id="damage-title">Missing or damaged gear</h2>
+        <div id="damage-form"></div>
+        <button class="btn" type="button" id="damage-save">Save</button>
+        <button class="btn ghost" type="button" id="damage-cancel">Cancel</button>
+      </div>
+    </div>
+    <div class="modal" id="terms-modal" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="terms-title">
+        <h2 id="terms-title">Terms and conditions</h2>
+        <div class="terms-body" id="terms-body"></div>
+        <button class="btn" type="button" id="terms-close">Close</button>
+      </div>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>
