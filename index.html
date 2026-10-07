@@ -46,6 +46,9 @@
         min-height: 100vh;
         padding-bottom: calc(var(--tab) + env(safe-area-inset-bottom) + 8px);
       }
+      .app.no-tabs { padding-bottom: calc(env(safe-area-inset-bottom) + 16px); }
+      .app.no-tabs .tabs { display: none; }
+      [hidden] { display: none !important; }
       .page { display: none; padding: 16px 18px 28px; }
       .page.is-active { display: block; }
       h2 { margin: 0 0 14px; font-size: 22px; font-weight: 700; letter-spacing: -0.03em; color: var(--navy); }
@@ -95,13 +98,13 @@
         padding: 6px;
         cursor: pointer;
       }
-      .coin {
-        width: 16px;
-        height: 16px;
-        fill: var(--coin);
-        stroke: #9a7510;
-        stroke-width: 1;
+      .coin, .tab-coin {
+        width: 18px;
+        height: 18px;
+        object-fit: contain;
+        display: block;
       }
+      .tab-coin { width: 22px; height: 22px; }
       .picker {
         position: relative;
       }
@@ -323,13 +326,30 @@
         touch-action: none;
       }
       .bill {
-        background: var(--navy-soft);
+        background: var(--white);
+        border: 1px solid var(--line);
         border-radius: 14px;
-        padding: 14px;
+        overflow: hidden;
+      }
+      .bill-who { padding: 14px 14px 10px; font-weight: 700; font-size: 16px; }
+      .bill-row {
         display: flex;
         justify-content: space-between;
-        font-weight: 700;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        border-top: 1px solid var(--line);
+        font-size: 14px;
       }
+      .bill-row.remain { background: var(--navy-soft); font-weight: 700; }
+      .bill-row.low, .bill-row.low .credits-chip { color: var(--danger); }
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-8px); }
+        50% { transform: translateX(8px); }
+        75% { transform: translateX(-5px); }
+      }
+      .btn.shake { animation: shake .35s ease; }
       .error {
         color: var(--danger);
         min-height: 1.2em;
@@ -452,9 +472,33 @@
       .tabs svg { width: 22px; height: 22px; }
       .empty { color: var(--muted); }
       .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-      .stat { border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+      .stat { border: 1px solid var(--line); border-radius: 14px; padding: 14px; background: var(--white); }
+      .stat.wide { grid-column: 1 / -1; }
+      .stat.net b { font-size: 28px; }
       .stat p { margin: 0; color: var(--muted); font-size: 12px; }
       .stat b { display: block; margin-top: 6px; font-size: 20px; color: var(--navy); }
+      .stat .btn { margin-top: 10px; padding: 10px; }
+      .stat-gap { grid-column: 1 / -1; height: 6px; }
+      .exp-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+      .exp-bar .btn { width: auto; padding: 10px 14px; }
+      .back-btn {
+        width: 42px; height: 42px; border-radius: 12px; border: 1px solid var(--line);
+        background: var(--white); color: var(--navy); font: inherit; font-size: 22px; cursor: pointer;
+      }
+      .text-input {
+        width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: 12px; font: inherit; color: var(--ink);
+      }
+      .swipe { position: relative; overflow: hidden; border-radius: 14px; margin-bottom: 8px; background: var(--danger); }
+      .swipe-bin {
+        position: absolute; right: 0; top: 0; bottom: 0; width: 76px; border: 0;
+        background: var(--danger); color: var(--white); display: grid; place-items: center; cursor: pointer;
+      }
+      .swipe-front {
+        position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        background: var(--navy-soft); border-radius: 14px; padding: 12px 14px; min-height: 58px;
+        transform: translateX(0); transition: transform .18s ease; touch-action: pan-y;
+      }
+      .swipe.is-open .swipe-front { transform: translateX(-76px); }
     </style>
   </head>
   <body>
@@ -493,8 +537,10 @@
             <button class="btn ghost" type="button" id="clear-sign" disabled style="margin-top:8px">Clear signature</button>
           </div>
           <div class="bill">
-            <span>Total bill</span>
-            <span id="bill-total" class="credits-chip"></span>
+            <div class="bill-who" id="bill-who">Select a customer</div>
+            <div class="bill-row"><span>Current credit balance</span><span id="bill-current">—</span></div>
+            <div class="bill-row"><span>Total bill</span><span id="bill-total"></span></div>
+            <div class="bill-row remain" id="bill-remain-row"><span>Remaining credit balance</span><span id="bill-remain">—</span></div>
           </div>
           <p class="error" id="book-error"></p>
           <button class="btn" type="submit">Confirm and book</button>
@@ -539,13 +585,35 @@
       <section class="page is-active" id="finance">
         <h2>Financial Standing</h2>
         <div class="stats">
-          <div class="stat"><p>Credit sales</p><b id="fin-sales">$0.00</b></div>
+          <div class="stat wide net"><p>Net profit</p><b id="fin-profit">€0.00</b></div>
+          <div class="stat"><p>Total credit revenue</p><b id="fin-sales">€0.00</b></div>
+          <div class="stat">
+            <p>Total expenses</p>
+            <b id="fin-exp">€0.00</b>
+            <button class="btn ghost" type="button" id="view-expenses">View expenses</button>
+          </div>
+          <div class="stat-gap"></div>
           <div class="stat"><p>Credits outstanding</p><b id="fin-out">0</b></div>
           <div class="stat"><p>Credits used</p><b id="fin-used">0</b></div>
-          <div class="stat"><p>Bookings</p><b id="fin-books">0</b></div>
+          <div class="stat"><p>No. bookings</p><b id="fin-books">0</b></div>
         </div>
         <button class="btn" id="install" hidden style="margin-top:14px">Install app</button>
-        <p class="empty" id="status"></p>
+      </section>
+
+      <section class="page" id="expenses">
+        <div class="exp-bar">
+          <button class="btn ghost" type="button" id="add-expense">Add expense</button>
+          <button class="back-btn" type="button" id="expenses-back" aria-label="Back">←</button>
+        </div>
+        <h2>Expenses</h2>
+        <div class="stat wide" style="margin-bottom:14px"><p>Total expenses</p><b id="exp-total">€0.00</b></div>
+        <form id="expense-form" class="form" hidden>
+          <input id="exp-name" class="text-input" placeholder="Name" />
+          <input id="exp-amount" class="text-input" type="number" min="0" step="0.01" placeholder="Amount in euro" />
+          <input id="exp-memo" class="text-input" placeholder="Memo" />
+          <button class="btn" type="submit">Save expense</button>
+        </form>
+        <div id="expense-list"></div>
       </section>
 
       <section class="page" id="settings">
@@ -599,7 +667,7 @@
           Review Bookings
         </button>
         <button data-tab="credits">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#d4a017" stroke="#9a7510" /><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">C</text></svg>
+          <img class="tab-coin" src="credit-icon.png" alt="" />
           Credits
         </button>
         <button class="is-active" data-tab="finance">

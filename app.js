@@ -1,5 +1,5 @@
 const KEY = "pickle-central-v1";
-const COIN = `<img class="coin" src="credit-icon.jpg" alt="" />`;
+const COIN = `<img class="coin" src="credit-icon.png" alt="" />`;
 const defaultPaddles = () => [
   { id: "p1", label: "One pickleball paddle", credits: 3 },
   { id: "p2", label: "Two pickleball paddles", credits: 5 },
@@ -620,19 +620,20 @@ function updateBill() {
   const person = state.people.find((p) => p.id === document.getElementById("book-customer").dataset.id);
   const who = document.getElementById("bill-who");
   const remain = document.getElementById("bill-remain");
+  const remainRow = document.getElementById("bill-remain-row");
   document.getElementById("bill-total").innerHTML = creditsLabel(total);
   if (!person) {
     who.textContent = "Select a customer";
     document.getElementById("bill-current").textContent = "—";
     remain.textContent = "—";
-    remain.classList.remove("low");
+    remainRow.classList.remove("low");
     return;
   }
   const left = Number(person.credits) - total;
   who.textContent = person.name;
   document.getElementById("bill-current").innerHTML = creditsLabel(person.credits);
   remain.innerHTML = creditsLabel(left);
-  remain.classList.toggle("low", left < 0);
+  remainRow.classList.toggle("low", left < 0);
 }
 
 function renderPickers() {
@@ -942,7 +943,7 @@ document.getElementById("expense-form").addEventListener("submit", (event) => {
   const name = document.getElementById("exp-name").value.trim();
   const amount = Number(document.getElementById("exp-amount").value);
   const memo = document.getElementById("exp-memo").value.trim();
-  if (!name || !(amount >= 0)) return;
+  if (!name || document.getElementById("exp-amount").value === "" || !(amount >= 0)) return;
   state.expenses.unshift({ id: uid(), name, amount, memo });
   save();
   document.getElementById("expense-form").reset();
