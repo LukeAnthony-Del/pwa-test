@@ -1,5 +1,5 @@
 const KEY = "pickle-central-v1";
-const COIN = `<svg class="coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" stroke="none">C</text></svg>`;
+const COIN = `<img class="coin" src="credit-icon.jpg" alt="" />`;
 const defaultPaddles = () => [
   { id: "p1", label: "One pickleball paddle", credits: 3 },
   { id: "p2", label: "Two pickleball paddles", credits: 5 },
@@ -28,6 +28,7 @@ const defaultState = () => ({
   paddles: defaultPaddles(),
   balls: defaultBalls(),
   damageQuestions: defaultQuestions(),
+  expenses: [],
   terms:
     "Equipment rented from Pickle Central stays our property and must be returned at the end of the booking. Credits are charged at the rates shown when you confirm. You are responsible for loss or damage beyond normal wear. Your signature confirms you have read these terms and agree to them.",
 });
@@ -43,6 +44,7 @@ function load() {
     if (!Array.isArray(saved.paddles)) next.paddles = defaultPaddles();
     if (!Array.isArray(saved.balls)) next.balls = defaultBalls();
     if (!Array.isArray(saved.damageQuestions)) next.damageQuestions = defaultQuestions();
+    if (!Array.isArray(saved.expenses)) next.expenses = [];
     const source = Array.isArray(saved.equipment) ? saved.equipment : defaultEquipment();
     next.equipment = source
       .filter((item) => !/^nets?$/i.test(String(item.name || "").trim()))
@@ -69,7 +71,10 @@ if (!state.people) state.people = [];
 save();
 
 function money(n) {
-  return `$${Number(n || 0).toFixed(2)}`;
+  return new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(Number(n) || 0);
+}
+function creditsLabel(n) {
+  return `<span class="credits-chip">${COIN}${Number(n) || 0}</span>`;
 }
 function formatDate(iso) {
   if (!iso) return "Select date";
@@ -103,11 +108,11 @@ function pickerButton(root, label) {
   return { btn, menu };
 }
 
-function namePicker(root, { allowNew, filter }) {
+function namePicker(root, { allowNew, filter, showCredits = true }) {
   const people = state.people.filter(filter || (() => true));
   const { btn, menu } = pickerButton(root, root.dataset.label || "Select a person");
   menu.innerHTML = people
-    .map((p) => `<button type="button" data-id="${p.id}">${p.name} · ${p.credits} ${COIN}</button>`)
+    .map((p) => `<button type="button" data-id="${p.id}">${esc(p.name)}${showCredits ? ` · ${p.credits} ${COIN}` : ""}</button>`)
     .join("") + (allowNew ? `<button type="button" class="new" data-new="1">+ New person</button>
       <div class="new-person"><input placeholder="Full name" /><button type="button" class="btn" style="width:auto;padding:10px 12px">Add</button></div>` : "");
   if (!people.length && !allowNew) {
@@ -256,14 +261,104 @@ function renderEquipment() {
   });
 }
 
+function expenseTotal() {
+  return state.expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+}
+
 function renderFinance() {
   const sales = state.sales.reduce((s, x) => s + Number(x.price), 0);
+  const expenses = expenseTotal();
   const outstanding = state.people.reduce((s, p) => s + Number(p.credits), 0);
   const used = state.bookings.filter((b) => !b.refunded).reduce((s, b) => s + Number(b.credits), 0);
+  document.getElementById("fin-profit").textContent = money(sales - expenses);
   document.getElementById("fin-sales").textContent = money(sales);
-  document.getElementById("fin-out").innerHTML = `${outstanding}`;
-  document.getElementById("fin-used").textContent = String(used);
+  document.getElementById("fin-exp").textContent = money(expenses);
+  document.getElementById("fin-out").innerHTML = creditsLabel(outstanding);
+  document.getElementById("fin-used").innerHTML = creditsLabel(used);
   document.getElementById("fin-books").textContent = String(state.bookings.length);
+}
+
+function renderExpenses() {
+  const box = document.getElementById("expense-list");
+  document.getElementById("exp-total").textContent = money(expenseTotal());
+  if (!state.expenses.length) {
+    box.innerHTML = `<p class="empty">No expenses yet.</p>`;
+    return;
+  }
+  box.innerHTML = state.expenses
+    .map(
+      (item) => `<article class="swipe" data-id="${esc(item.id)}">
+        <button type="button" class="swipe-bin" aria-label="Delete ${esc(item.name)}">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
+        </button>
+        <div class="swipe-front">
+          <div>
+            <b>${esc(item.name)}</b>
+            ${item.memo ? `<div class="review-meta">${esc(item.memo)}</div>` : ""}
+          </div>
+          <span>${money(item.amount)}</span>
+        </div>
+      </article>`
+    )
+    .join("");
+  box.querySelectorAll(".swipe").forEach(bindSwipe);
+  box.querySelectorAll(".swipe-bin").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const row = btn.closest(".swipe");
+      state.expenses = state.expenses.filter((item) => item.id !== row.dataset.id);
+      save();
+      renderExpenses();
+      renderFinance();
+    });
+  });
+}
+
+function bindSwipe(row) {
+  const front = row.querySelector(".swipe-front");
+  let startX = 0;
+  let startY = 0;
+  let dx = 0;
+  let dragging = false;
+  let horizontal = false;
+  front.addEventListener("pointerdown", (event) => {
+    startX = event.clientX;
+    startY = event.clientY;
+    dx = 0;
+    dragging = true;
+    horizontal = false;
+    front.style.transition = "none";
+  });
+  front.addEventListener("pointermove", (event) => {
+    if (!dragging) return;
+    const mx = event.clientX - startX;
+    const my = event.clientY - startY;
+    if (!horizontal) {
+      if (Math.abs(mx) < 8 && Math.abs(my) < 8) return;
+      if (Math.abs(my) > Math.abs(mx)) {
+        dragging = false;
+        front.style.transition = "";
+        front.style.transform = "";
+        return;
+      }
+      horizontal = true;
+    }
+    const base = row.classList.contains("is-open") ? -76 : 0;
+    const next = Math.min(12, Math.max(-96, base + mx));
+    dx = mx;
+    front.style.transform = `translateX(${next}px)`;
+  });
+  function finish() {
+    if (!dragging && !horizontal) return;
+    dragging = false;
+    front.style.transition = "";
+    front.style.transform = "";
+    const base = row.classList.contains("is-open") ? -76 : 0;
+    row.classList.toggle("is-open", base + dx < -36);
+    dx = 0;
+    horizontal = false;
+  }
+  front.addEventListener("pointerup", finish);
+  front.addEventListener("pointercancel", finish);
 }
 
 function renderPacks() {
@@ -522,20 +617,29 @@ function bookingTotal() {
 
 function updateBill() {
   const total = bookingTotal();
-  document.getElementById("bill-total").innerHTML = `${COIN}${total} credits`;
   const person = state.people.find((p) => p.id === document.getElementById("book-customer").dataset.id);
-  const err = document.getElementById("book-error");
+  const who = document.getElementById("bill-who");
+  const remain = document.getElementById("bill-remain");
+  document.getElementById("bill-total").innerHTML = creditsLabel(total);
   if (!person) {
-    err.textContent = "";
+    who.textContent = "Select a customer";
+    document.getElementById("bill-current").textContent = "—";
+    remain.textContent = "—";
+    remain.classList.remove("low");
     return;
   }
-  err.textContent = person.credits < total ? `${person.name} only has ${person.credits} credits remaining.` : "";
+  const left = Number(person.credits) - total;
+  who.textContent = person.name;
+  document.getElementById("bill-current").innerHTML = creditsLabel(person.credits);
+  remain.innerHTML = creditsLabel(left);
+  remain.classList.toggle("low", left < 0);
 }
 
 function renderPickers() {
   namePicker(document.getElementById("credit-name"), { allowNew: true });
   namePicker(document.getElementById("book-customer"), {
     allowNew: false,
+    showCredits: false,
     filter: (p) => p.credits > 0,
   });
   datePicker(document.getElementById("credit-date"), document.getElementById("credit-date").dataset.value || todayISO());
@@ -559,6 +663,7 @@ function render() {
   renderQuestions();
   renderTerms();
   renderReviews();
+  renderExpenses();
   renderChoices();
   renderPickers();
   updateBill();
@@ -726,22 +831,27 @@ document.getElementById("booking-form").addEventListener("submit", (event) => {
   const err = document.getElementById("book-error");
   if (!person) {
     err.textContent = "Select a customer with credits.";
+    shakeSubmit();
     return;
   }
   if (!paddleId && !ballId) {
     err.textContent = "Select paddles or balls to rent.";
+    shakeSubmit();
     return;
   }
   if (person.credits < total) {
     err.textContent = `${person.name} only has ${person.credits} credits remaining.`;
+    shakeSubmit();
     return;
   }
   if (!document.getElementById("agree-terms").checked) {
     err.textContent = "Please agree to the terms and conditions.";
+    shakeSubmit();
     return;
   }
   if (!signed) {
     err.textContent = "Customer signature is required.";
+    shakeSubmit();
     return;
   }
   person.credits -= total;
@@ -782,21 +892,67 @@ document.getElementById("booked-ok").addEventListener("click", () => {
   bookedModal.hidden = true;
   bookedSound.pause();
   bookedSound.currentTime = 0;
+  clearBooking();
+  showTab("finance");
 });
+
+function shakeSubmit() {
+  const button = document.querySelector("#booking-form [type=submit]");
+  button.classList.remove("shake");
+  void button.offsetWidth;
+  button.classList.add("shake");
+}
+
+function clearBooking() {
+  paddleId = "";
+  ballId = "";
+  const customer = document.getElementById("book-customer");
+  delete customer.dataset.id;
+  delete customer.dataset.label;
+  document.getElementById("agree-terms").checked = false;
+  setSignEnabled(false);
+  signed = false;
+  document.getElementById("book-error").textContent = "";
+  document.getElementById("book-date").dataset.value = todayISO();
+  render();
+}
+
+function showTab(id) {
+  document.querySelectorAll(".tabs button").forEach((tab) => tab.classList.toggle("is-active", tab.dataset.tab === id));
+  document.querySelectorAll(".page").forEach((page) => page.classList.toggle("is-active", page.id === id));
+  document.querySelector(".app").classList.toggle("no-tabs", id === "expenses");
+  if (id === "booking") sizeCanvas();
+}
 
 document.getElementById("book-customer").addEventListener("change", updateBill);
 
 document.querySelectorAll(".tabs button").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".tabs button").forEach((t) => t.classList.toggle("is-active", t === btn));
-    document.querySelectorAll(".page").forEach((p) => p.classList.toggle("is-active", p.id === btn.dataset.tab));
-    if (btn.dataset.tab === "booking") sizeCanvas();
-  });
+  btn.addEventListener("click", () => showTab(btn.dataset.tab));
+});
+
+document.getElementById("view-expenses").addEventListener("click", () => showTab("expenses"));
+document.getElementById("expenses-back").addEventListener("click", () => showTab("finance"));
+document.getElementById("add-expense").addEventListener("click", () => {
+  const form = document.getElementById("expense-form");
+  form.hidden = !form.hidden;
+  if (!form.hidden) document.getElementById("exp-name").focus();
+});
+document.getElementById("expense-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const name = document.getElementById("exp-name").value.trim();
+  const amount = Number(document.getElementById("exp-amount").value);
+  const memo = document.getElementById("exp-memo").value.trim();
+  if (!name || !(amount >= 0)) return;
+  state.expenses.unshift({ id: uid(), name, amount, memo });
+  save();
+  document.getElementById("expense-form").reset();
+  document.getElementById("expense-form").hidden = true;
+  renderExpenses();
+  renderFinance();
 });
 
 render();
 
-const status = document.getElementById("status");
 const installBtn = document.getElementById("install");
 let deferredPrompt;
 if ("serviceWorker" in navigator) {
@@ -820,6 +976,3 @@ installBtn.addEventListener("click", async () => {
   deferredPrompt = null;
   installBtn.hidden = true;
 });
-if (window.matchMedia("(display-mode: standalone)").matches) {
-  status.textContent = "Running as installed app.";
-}
