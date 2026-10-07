@@ -313,8 +313,9 @@ function renderExpenses() {
   });
 }
 
-function bindSwipe(row) {
+function bindSwipe(row, openPx = 76) {
   const front = row.querySelector(".swipe-front");
+  row.style.setProperty("--open", `${openPx}px`);
   let startX = 0;
   let startY = 0;
   let dx = 0;
@@ -342,8 +343,8 @@ function bindSwipe(row) {
       }
       horizontal = true;
     }
-    const base = row.classList.contains("is-open") ? 76 : 0;
-    const next = Math.max(-12, Math.min(96, base + mx));
+    const base = row.classList.contains("is-open") ? openPx : 0;
+    const next = Math.max(-12, Math.min(openPx + 20, base + mx));
     dx = mx;
     front.style.transform = `translateX(${next}px)`;
   });
@@ -352,8 +353,8 @@ function bindSwipe(row) {
     dragging = false;
     front.style.transition = "";
     front.style.transform = "";
-    const base = row.classList.contains("is-open") ? 76 : 0;
-    row.classList.toggle("is-open", base + dx > 36);
+    const base = row.classList.contains("is-open") ? openPx : 0;
+    row.classList.toggle("is-open", base + dx > openPx / 2);
     dx = 0;
     horizontal = false;
   }
@@ -476,53 +477,40 @@ function renderReviews() {
     .map((booking) => {
       const rented = [booking.paddle, booking.balls].filter(Boolean).map((item) => esc(item)).join("<br>");
       const summary = damageSummary(booking);
-      return `<article class="review">
-        <div class="review-top">
-          <div class="who">
+      const pending = !booking.gearStatus;
+      return `<article class="swipe review-swipe${pending ? " is-pending" : ""}" data-id="${esc(booking.id)}">
+        <div class="swipe-actions">
+          <button type="button" class="swipe-cash" data-refund="${esc(booking.id)}" aria-label="Refund ${esc(booking.customer)}" ${booking.refunded ? "disabled" : ""}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>
+          </button>
+          <button type="button" class="swipe-bin" data-remove-booking="${esc(booking.id)}" aria-label="Remove ${esc(booking.customer)}">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
+          </button>
+        </div>
+        <div class="swipe-front">
+          <div class="review-body">
             <b>${esc(booking.customer)}</b>
             <div class="review-meta">${esc(formatDate(booking.date))} · ${Number(booking.credits) || 0} credits${booking.refunded ? " · Refunded" : ""}</div>
+            <div class="review-rented">${rented || "No gear recorded"}</div>
+            ${booking.gearStatus === "ok" ? `<div class="review-summary">All gear returned, no damage.</div>` : ""}
+            ${summary ? `<div class="review-summary">${esc(summary)}</div>` : ""}
           </div>
-          <div class="marks">
-            <button type="button" class="mark ${booking.gearStatus === "ok" ? "on-ok" : ""}" data-ok="${esc(booking.id)}" aria-label="All gear returned with no damage">✓</button>
-            <button type="button" class="mark ${booking.gearStatus === "issue" ? "on-bad" : ""}" data-bad="${esc(booking.id)}" aria-label="Gear missing or damaged">✕</button>
-          </div>
-        </div>
-        <div class="review-rented">${rented || "No gear recorded"}</div>
-        ${booking.gearStatus === "ok" ? `<div class="review-summary">All gear returned, no damage.</div>` : ""}
-        ${summary ? `<div class="review-summary">${esc(summary)}</div>` : ""}
-        <div class="review-actions">
-          <button type="button" class="btn ghost" data-refund="${esc(booking.id)}" ${booking.refunded ? "disabled" : ""}>Refund</button>
-          <button type="button" class="btn danger" data-remove-booking="${esc(booking.id)}">Remove</button>
+          <button type="button" class="btn review-go" data-review="${esc(booking.id)}">Review</button>
         </div>
       </article>`;
     })
     .join("");
-  box.querySelectorAll("[data-ok]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const booking = state.bookings.find((item) => item.id === btn.dataset.ok);
-      if (!booking) return;
-      if (booking.gearStatus === "ok") {
-        booking.gearStatus = "";
-      } else {
-        booking.gearStatus = "ok";
-        booking.missing = [];
-        booking.damageAnswers = [];
-      }
-      save();
-      renderReviews();
-    });
-  });
-  box.querySelectorAll("[data-bad]").forEach((btn) => {
-    btn.addEventListener("click", () => openDamage(btn.dataset.bad));
+  box.querySelectorAll(".swipe").forEach((row) => bindSwipe(row, 152));
+  box.querySelectorAll("[data-review]").forEach((btn) => {
+    btn.addEventListener("pointerdown", (event) => event.stopPropagation());
+    btn.addEventListener("click", () => openReview(btn.dataset.review));
   });
   box.querySelectorAll("[data-refund]").forEach((btn) => {
     btn.addEventListener("click", () => refundBooking(btn.dataset.refund));
   });
   box.querySelectorAll("[data-remove-booking]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const booking = state.bookings.find((item) => item.id === btn.dataset.removeBooking);
-      if (!booking || !confirm(`Remove ${booking.customer}'s booking? Credits stay spent unless you refund first.`)) return;
-      state.bookings = state.bookings.filter((item) => item.id !== booking.id);
+      state.bookings = state.bookings.filter((item) => item.id !== btn.dataset.removeBooking);
       save();
       render();
     });
@@ -537,7 +525,6 @@ function refundBooking(id) {
     alert("That customer is no longer in Credits, so these credits cannot be returned.");
     return;
   }
-  if (!confirm(`Refund ${booking.credits} credits to ${person.name}?`)) return;
   person.credits += Number(booking.credits) || 0;
   booking.refunded = true;
   save();
@@ -545,6 +532,18 @@ function refundBooking(id) {
 }
 
 let damageBookingId = "";
+let reviewBookingId = "";
+
+function openReview(id) {
+  if (!state.bookings.some((item) => item.id === id)) return;
+  reviewBookingId = id;
+  document.getElementById("review-modal").hidden = false;
+}
+
+function closeReview() {
+  document.getElementById("review-modal").hidden = true;
+  reviewBookingId = "";
+}
 
 function openDamage(id) {
   const booking = state.bookings.find((item) => item.id === id);
@@ -820,6 +819,25 @@ document.getElementById("damage-save").addEventListener("click", () => {
 damageModal.addEventListener("click", (event) => {
   if (event.target === damageModal) closeDamage();
 });
+document.getElementById("review-ok").addEventListener("click", () => {
+  const booking = state.bookings.find((item) => item.id === reviewBookingId);
+  if (!booking) return;
+  booking.gearStatus = "ok";
+  booking.missing = [];
+  booking.damageAnswers = [];
+  save();
+  closeReview();
+  renderReviews();
+});
+document.getElementById("review-bad").addEventListener("click", () => {
+  const id = reviewBookingId;
+  closeReview();
+  openDamage(id);
+});
+document.getElementById("review-cancel").addEventListener("click", closeReview);
+document.getElementById("review-modal").addEventListener("click", (event) => {
+  if (event.target.id === "review-modal") closeReview();
+});
 document.getElementById("terms-editor").addEventListener("input", () => {
   state.terms = document.getElementById("terms-editor").value;
   save();
@@ -878,6 +896,7 @@ document.getElementById("booking-form").addEventListener("submit", (event) => {
   signed = false;
   err.textContent = "";
   render();
+  askNotify();
   showBooked();
 });
 
@@ -923,6 +942,7 @@ function showTab(id) {
   document.querySelectorAll(".page").forEach((page) => page.classList.toggle("is-active", page.id === id));
   document.querySelector(".app").classList.toggle("no-tabs", id === "expenses");
   if (id === "booking") sizeCanvas();
+  if (id === "reviews") askNotify();
 }
 
 document.getElementById("book-customer").addEventListener("change", updateBill);
@@ -933,10 +953,18 @@ document.querySelectorAll(".tabs button").forEach((btn) => {
 
 document.getElementById("view-expenses").addEventListener("click", () => showTab("expenses"));
 document.getElementById("expenses-back").addEventListener("click", () => showTab("finance"));
+function closeExpense() {
+  document.getElementById("expense-modal").hidden = true;
+  document.getElementById("expense-form").reset();
+}
 document.getElementById("add-expense").addEventListener("click", () => {
-  const form = document.getElementById("expense-form");
-  form.hidden = !form.hidden;
-  if (!form.hidden) document.getElementById("exp-name").focus();
+  document.getElementById("expense-form").reset();
+  document.getElementById("expense-modal").hidden = false;
+  document.getElementById("exp-name").focus();
+});
+document.getElementById("expense-cancel").addEventListener("click", closeExpense);
+document.getElementById("expense-modal").addEventListener("click", (event) => {
+  if (event.target.id === "expense-modal") closeExpense();
 });
 document.getElementById("expense-form").addEventListener("submit", (event) => {
   event.preventDefault();
@@ -946,13 +974,57 @@ document.getElementById("expense-form").addEventListener("submit", (event) => {
   if (!name || document.getElementById("exp-amount").value === "" || !(amount >= 0)) return;
   state.expenses.unshift({ id: uid(), name, amount, memo });
   save();
-  document.getElementById("expense-form").reset();
-  document.getElementById("expense-form").hidden = true;
+  closeExpense();
   renderExpenses();
   renderFinance();
 });
+document.getElementById("reset-all").addEventListener("click", () => {
+  if (!confirm("Delete all bookings, credit sales, expenses, and credit balances? This cannot be undone.")) return;
+  state.bookings = [];
+  state.sales = [];
+  state.expenses = [];
+  state.people.forEach((person) => {
+    person.credits = 0;
+  });
+  save();
+  render();
+});
+
+function askNotify() {
+  if (!("Notification" in window) || Notification.permission !== "default") return;
+  Notification.requestPermission();
+}
+
+let reviewPingBusy = false;
+function pingPendingReviews() {
+  if (reviewPingBusy || !("Notification" in window) || Notification.permission !== "granted") return;
+  const pending = state.bookings.filter((booking) => !booking.gearStatus && !booking.reviewPinged);
+  if (!pending.length) return;
+  reviewPingBusy = true;
+  const notify = navigator.serviceWorker?.ready
+    ? navigator.serviceWorker.ready.then((reg) =>
+        reg.showNotification("Booking Review Pending", { icon: "icon-192.png", tag: "booking-review-pending" })
+      )
+    : Promise.resolve(new Notification("Booking Review Pending"));
+  notify
+    .then(() => {
+      pending.forEach((booking) => {
+        booking.reviewPinged = true;
+      });
+      save();
+    })
+    .catch(() => {})
+    .finally(() => {
+      reviewPingBusy = false;
+    });
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") pingPendingReviews();
+});
+window.addEventListener("pagehide", pingPendingReviews);
 
 render();
+if (new URLSearchParams(location.search).get("review") === "1") showTab("reviews");
 
 const installBtn = document.getElementById("install");
 let deferredPrompt;

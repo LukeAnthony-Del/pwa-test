@@ -388,16 +388,13 @@
       }
       .stock-row .name { flex: 1; font-weight: 700; }
       .stock-row input { width: 88px; text-align: center; }
-      .review {
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        padding: 12px;
-        margin-bottom: 10px;
-        background: var(--white);
-      }
-      .review-top { display: flex; align-items: flex-start; gap: 8px; }
-      .review-top .who { flex: 1; min-width: 0; }
-      .review-top b { display: block; font-size: 16px; }
+      .review-body { flex: 1; min-width: 0; }
+      .review-body b { display: block; font-size: 16px; }
+      .review-swipe .swipe-front { align-items: center; background: var(--white); }
+      .review-swipe.is-pending .swipe-front { background: #fde8e8; box-shadow: inset 0 0 0 1.5px var(--danger); }
+      .review-swipe.is-pending .review-body b,
+      .review-swipe.is-pending .review-meta { color: var(--danger); }
+      .review-go { width: auto; padding: 8px 12px; flex: none; }
       .review-meta, .review-rented { color: var(--muted); font-size: 13px; margin-top: 4px; }
       .review-rented { color: var(--ink); }
       .marks { display: flex; gap: 6px; }
@@ -410,7 +407,9 @@
         color: var(--muted);
         font: inherit;
         font-weight: 700;
-        cursor: pointer;
+        display: grid;
+        place-items: center;
+        flex: none;
       }
       .mark.on-ok { background: var(--navy); color: var(--white); border-color: var(--navy); }
       .mark.on-bad { background: var(--danger); color: var(--white); border-color: var(--danger); }
@@ -422,9 +421,22 @@
         font-size: 13px;
         white-space: pre-wrap;
       }
-      .review-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-      .review-actions .btn { padding: 10px; }
       .btn.danger { background: var(--white); color: var(--danger); border: 1px solid var(--danger); }
+      .reset-all { margin-top: 22px; }
+      .swipe-actions { position: absolute; left: 0; top: 0; bottom: 0; display: flex; }
+      .swipe-actions .swipe-cash,
+      .swipe-actions .swipe-bin {
+        position: static; width: 76px; height: 100%; border: 0; color: var(--white);
+        display: grid; place-items: center; cursor: pointer;
+      }
+      .swipe-actions .swipe-cash { background: #1c8c4e; }
+      .swipe-actions .swipe-cash:disabled { opacity: 0.4; cursor: default; }
+      .swipe-actions .swipe-bin { background: var(--danger); }
+      .choice-review {
+        display: flex; align-items: center; gap: 12px; width: 100%;
+        border: 1px solid var(--line); border-radius: 14px; background: var(--white);
+        padding: 12px; font: inherit; font-weight: 700; color: var(--ink); text-align: left; cursor: pointer;
+      }
       .miss-row { display: flex; align-items: flex-start; gap: 8px; margin: 6px 0; font-size: 14px; }
       .miss-row input { margin-top: 3px; accent-color: var(--navy); }
       .damage-q {
@@ -498,7 +510,7 @@
         background: var(--navy-soft); border-radius: 14px; padding: 12px 14px; min-height: 58px;
         transform: translateX(0); transition: transform .18s ease; touch-action: pan-y;
       }
-      .swipe.is-open .swipe-front { transform: translateX(76px); }
+      .swipe.is-open .swipe-front { transform: translateX(var(--open, 76px)); }
     </style>
   </head>
   <body>
@@ -607,12 +619,6 @@
         </div>
         <h2>Expenses</h2>
         <div class="stat wide" style="margin-bottom:14px"><p>Total expenses</p><b id="exp-total">€0.00</b></div>
-        <form id="expense-form" class="form" hidden>
-          <input id="exp-name" class="text-input" placeholder="Name" />
-          <input id="exp-amount" class="text-input" type="number" min="0" step="0.01" placeholder="Amount in euro" />
-          <input id="exp-memo" class="text-input" placeholder="Memo" />
-          <button class="btn" type="submit">Save expense</button>
-        </form>
         <div id="expense-list"></div>
       </section>
 
@@ -645,6 +651,7 @@
           <p class="empty" style="margin:0 0 10px">This text appears when someone opens the terms on a booking.</p>
           <textarea id="terms-editor" class="terms-editor"></textarea>
         </div>
+        <button class="btn danger reset-all" type="button" id="reset-all">Reset all</button>
       </section>
 
       <nav class="tabs" aria-label="Main">
@@ -652,19 +659,19 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" /></svg>
           Add Booking
         </button>
-        <button data-tab="equipment">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M7 3.2h7.1c2.6 0 4.7 2.1 4.7 4.8S16.7 13 14.1 13h-1.6l.8 7c.1.9-.6 1.6-1.4 1.6h-.7c-.8 0-1.5-.7-1.4-1.6l.8-7H7C4.5 13 2.5 11 2.5 8.4S4.4 3.2 7 3.2z" />
-            <circle cx="10.6" cy="7.4" r="1.15" fill="#fff" />
-          </svg>
-          Equipment Log
-        </button>
         <button data-tab="reviews">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M8 6h11M8 12h11M8 18h11" />
             <path d="M4 6h.01M4 12h.01M4 18h.01" />
           </svg>
           Review Bookings
+        </button>
+        <button data-tab="equipment">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M7 3.2h7.1c2.6 0 4.7 2.1 4.7 4.8S16.7 13 14.1 13h-1.6l.8 7c.1.9-.6 1.6-1.4 1.6h-.7c-.8 0-1.5-.7-1.4-1.6l.8-7H7C4.5 13 2.5 11 2.5 8.4S4.4 3.2 7 3.2z" />
+            <circle cx="10.6" cy="7.4" r="1.15" fill="#fff" />
+          </svg>
+          Equipment Log
         </button>
         <button data-tab="credits">
           <img class="tab-coin" src="credit-icon.png" alt="" />
@@ -693,6 +700,26 @@
       </div>
     </div>
     <audio id="booked-sound" src="success.mp3" preload="auto"></audio>
+    <div class="modal" id="expense-modal" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="expense-title">
+        <h2 id="expense-title">Add expense</h2>
+        <form id="expense-form" class="form">
+          <input id="exp-name" class="text-input" placeholder="Name" aria-label="Name" />
+          <input id="exp-amount" class="text-input" type="number" min="0" step="0.01" placeholder="Amount in euro" aria-label="Amount in euro" />
+          <input id="exp-memo" class="text-input" placeholder="Memo" aria-label="Memo" />
+          <button class="btn" type="submit">Save expense</button>
+        </form>
+        <button class="btn ghost" type="button" id="expense-cancel">Cancel</button>
+      </div>
+    </div>
+    <div class="modal" id="review-modal" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="review-title">
+        <h2 id="review-title">Review booking</h2>
+        <button class="choice-review" type="button" id="review-ok"><span class="mark on-ok">✓</span><span>All gear returned, no damage</span></button>
+        <button class="choice-review" type="button" id="review-bad"><span class="mark on-bad">✕</span><span>Some or all gear lost or damaged</span></button>
+        <button class="btn ghost" type="button" id="review-cancel">Cancel</button>
+      </div>
+    </div>
     <div class="modal" id="damage-modal" hidden>
       <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="damage-title">
         <h2 id="damage-title">Missing or damaged gear</h2>
