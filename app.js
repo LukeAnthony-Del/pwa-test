@@ -1237,26 +1237,6 @@ document.addEventListener("wheel", (event) => {
   if (event.ctrlKey) event.preventDefault();
 }, { passive: false });
 
-let pullStartX = 0;
-let pullStartY = 0;
-let pullTracking = false;
-document.addEventListener("touchstart", (event) => {
-  if (event.touches.length !== 1) return;
-  if (event.target.closest("input, textarea, select, canvas")) return;
-  pullStartX = event.touches[0].clientX;
-  pullStartY = event.touches[0].clientY;
-  pullTracking = true;
-}, { passive: true });
-document.addEventListener("touchend", (event) => {
-  if (!pullTracking) return;
-  pullTracking = false;
-  const touch = event.changedTouches[0];
-  const dx = touch.clientX - pullStartX;
-  const dy = touch.clientY - pullStartY;
-  if (Math.abs(dy) < 120 || Math.abs(dy) < Math.abs(dx)) return;
-  document.body.classList.toggle("tabs-down", dy > 0);
-}, { passive: true });
-
 const installBtn = document.getElementById("install");
 let deferredPrompt;
 if ("serviceWorker" in navigator) {

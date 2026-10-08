@@ -50,10 +50,6 @@
       .app {
         min-height: 100vh;
         padding-bottom: calc(var(--tab) + env(safe-area-inset-bottom) + 8px);
-        transition: padding-bottom .22s ease;
-      }
-      body.tabs-down .app {
-        padding-bottom: calc(env(safe-area-inset-bottom) + 12px);
       }
       .app.no-tabs { padding-bottom: calc(env(safe-area-inset-bottom) + 16px); }
       .app.no-tabs .tabs { display: none; }
@@ -561,9 +557,7 @@
         border-top: 1px solid var(--line);
         padding-bottom: env(safe-area-inset-bottom);
         z-index: 5;
-        transition: transform .22s ease;
       }
-      body.tabs-down .tabs { transform: translateY(110%); }
       .tabs button {
         border: 0;
         background: transparent;
