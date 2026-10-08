@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#142141" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -43,11 +43,17 @@
         font-weight: 500;
         overscroll-behavior: contain;
         touch-action: pan-y;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
       }
       body { padding-top: env(safe-area-inset-top); }
       .app {
         min-height: 100vh;
         padding-bottom: calc(var(--tab) + env(safe-area-inset-bottom) + 8px);
+        transition: padding-bottom .22s ease;
+      }
+      body.tabs-down .app {
+        padding-bottom: calc(env(safe-area-inset-bottom) + 12px);
       }
       .app.no-tabs { padding-bottom: calc(env(safe-area-inset-bottom) + 16px); }
       .app.no-tabs .tabs { display: none; }
@@ -118,8 +124,8 @@
         cursor: pointer;
       }
       .coin, .tab-coin {
-        width: 18px;
-        height: 18px;
+        width: 22px;
+        height: 22px;
         object-fit: contain;
         display: block;
       }
@@ -414,6 +420,28 @@
       .review-swipe.is-pending .review-body b,
       .review-swipe.is-pending .review-meta { color: var(--danger); }
       .review-go { width: auto; padding: 8px 12px; flex: none; }
+      .review-swipe.is-reviewed .swipe-front { padding-right: 36px; }
+      .review-edit {
+        position: absolute;
+        top: 4px;
+        right: 6px;
+        z-index: 2;
+        border: 0;
+        background: transparent;
+        font-size: 15px;
+        line-height: 1;
+        padding: 2px;
+        cursor: pointer;
+      }
+      .review-swipe.is-refunded .swipe-front {
+        background: #e4e9ef;
+        border-color: #c3ccd6;
+        color: #7d8ba0;
+      }
+      .review-swipe.is-refunded .review-body b,
+      .review-swipe.is-refunded .review-meta,
+      .review-swipe.is-refunded .review-rented,
+      .review-swipe.is-refunded .review-summary { color: #7d8ba0; }
       .review-meta, .review-rented { color: var(--muted); font-size: 13px; margin-top: 4px; }
       .review-rented { color: var(--ink); }
       .marks { display: flex; gap: 6px; }
@@ -483,7 +511,9 @@
         border-top: 1px solid var(--line);
         padding-bottom: env(safe-area-inset-bottom);
         z-index: 5;
+        transition: transform .22s ease;
       }
+      body.tabs-down .tabs { transform: translateY(110%); }
       .tabs button {
         border: 0;
         background: transparent;

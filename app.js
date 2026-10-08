@@ -489,7 +489,8 @@ function renderReviews() {
       const rented = [booking.paddle, booking.balls].filter(Boolean).map((item) => esc(item)).join("<br>");
       const summary = damageSummary(booking);
       const pending = !booking.gearStatus;
-      return `<article class="swipe review-swipe${pending ? " is-pending" : ""}" data-id="${esc(booking.id)}">
+      const reviewed = Boolean(booking.gearStatus);
+      return `<article class="swipe review-swipe${pending ? " is-pending" : ""}${reviewed ? " is-reviewed" : ""}${booking.refunded ? " is-refunded" : ""}" data-id="${esc(booking.id)}">
         <div class="swipe-actions">
           <button type="button" class="swipe-cash" data-refund="${esc(booking.id)}" aria-label="Refund ${esc(booking.customer)}" ${booking.refunded ? "disabled" : ""}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>
@@ -506,7 +507,9 @@ function renderReviews() {
             ${booking.gearStatus === "ok" ? `<div class="review-summary">All gear returned, no damage.</div>` : ""}
             ${summary ? `<div class="review-summary">${esc(summary)}</div>` : ""}
           </div>
-          <button type="button" class="btn review-go" data-review="${esc(booking.id)}">Review</button>
+          ${reviewed
+            ? `<button type="button" class="review-edit" data-review="${esc(booking.id)}" aria-label="Edit review">✏️</button>`
+            : `<button type="button" class="btn review-go" data-review="${esc(booking.id)}">Review</button>`}
         </div>
       </article>`;
     })
@@ -1099,6 +1102,35 @@ window.addEventListener("pagehide", pingPendingReviews);
 
 render();
 if (new URLSearchParams(location.search).get("review") === "1") showTab("reviews");
+
+document.addEventListener("gesturestart", (event) => event.preventDefault(), { passive: false });
+document.addEventListener("gesturechange", (event) => event.preventDefault(), { passive: false });
+document.addEventListener("touchmove", (event) => {
+  if (event.touches.length > 1 && event.cancelable) event.preventDefault();
+}, { passive: false });
+document.addEventListener("wheel", (event) => {
+  if (event.ctrlKey) event.preventDefault();
+}, { passive: false });
+
+let pullStartX = 0;
+let pullStartY = 0;
+let pullTracking = false;
+document.addEventListener("touchstart", (event) => {
+  if (event.touches.length !== 1) return;
+  if (event.target.closest("input, textarea, select, canvas")) return;
+  pullStartX = event.touches[0].clientX;
+  pullStartY = event.touches[0].clientY;
+  pullTracking = true;
+}, { passive: true });
+document.addEventListener("touchend", (event) => {
+  if (!pullTracking) return;
+  pullTracking = false;
+  const touch = event.changedTouches[0];
+  const dx = touch.clientX - pullStartX;
+  const dy = touch.clientY - pullStartY;
+  if (Math.abs(dy) < 120 || Math.abs(dy) < Math.abs(dx)) return;
+  document.body.classList.toggle("tabs-down", dy > 0);
+}, { passive: true });
 
 const installBtn = document.getElementById("install");
 let deferredPrompt;
