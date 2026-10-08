@@ -558,11 +558,15 @@ let reviewBookingId = "";
 function openSignature(id) {
   const booking = state.bookings.find((item) => item.id === id);
   const img = document.getElementById("signature-image");
+  const selfie = document.getElementById("signature-selfie");
   const missing = document.getElementById("signature-missing");
   const has = Boolean(booking && typeof booking.signature === "string" && booking.signature.startsWith("data:image"));
+  const hasSelfie = Boolean(booking && typeof booking.selfie === "string" && booking.selfie.startsWith("data:image"));
   img.hidden = !has;
   missing.hidden = has;
   img.src = has ? booking.signature : "";
+  selfie.hidden = !hasSelfie;
+  selfie.src = hasSelfie ? booking.selfie : "";
   document.getElementById("signature-modal").hidden = false;
 }
 
@@ -797,8 +801,97 @@ window.addEventListener("resize", () => {
   if (document.getElementById("credits").classList.contains("is-active")) creditPad.size();
 });
 
+let bookingSelfie = "";
+let selfieStream = null;
+let selfieToken = 0;
+
+function stopSelfieCamera() {
+  if (!selfieStream) return;
+  selfieStream.getTracks().forEach((track) => track.stop());
+  selfieStream = null;
+}
+
+function showBookingSelfie(src) {
+  const preview = document.getElementById("booking-selfie");
+  if (!src) {
+    preview.hidden = true;
+    preview.removeAttribute("src");
+    return;
+  }
+  preview.src = src;
+  preview.hidden = false;
+}
+
+async function takeBookingSelfie() {
+  const token = ++selfieToken;
+  bookingSelfie = "";
+  showBookingSelfie("");
+  const err = document.getElementById("book-error");
+  const box = document.getElementById("agree-terms");
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    box.checked = false;
+    bookPad.setEnabled(false);
+    err.textContent = "This phone cannot take a photo from the browser.";
+    return;
+  }
+  let stream = null;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: { facingMode: { ideal: "user" }, width: { ideal: 480 }, height: { ideal: 640 } },
+    });
+    selfieStream = stream;
+    if (token !== selfieToken) return;
+    const video = document.createElement("video");
+    video.setAttribute("playsinline", "");
+    video.muted = true;
+    video.srcObject = stream;
+    await video.play();
+    if (video.readyState < 2) {
+      await new Promise((resolve) => video.addEventListener("loadeddata", resolve, { once: true }));
+    }
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    if (token !== selfieToken || !box.checked) return;
+    const width = 320;
+    const ratio = video.videoWidth ? video.videoHeight / video.videoWidth : 1.25;
+    const height = Math.max(1, Math.round(width * ratio));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    ctx.translate(width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0, width, height);
+    bookingSelfie = canvas.toDataURL("image/jpeg", 0.72);
+    showBookingSelfie(bookingSelfie);
+    err.textContent = "";
+  } catch {
+    if (token !== selfieToken) return;
+    bookingSelfie = "";
+    showBookingSelfie("");
+    box.checked = false;
+    bookPad.setEnabled(false);
+    err.textContent = "Allow the front camera so a photo can be taken.";
+  } finally {
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+      if (selfieStream === stream) selfieStream = null;
+    }
+  }
+}
+
 document.getElementById("agree-terms").addEventListener("change", () => {
-  bookPad.setEnabled(document.getElementById("agree-terms").checked);
+  const on = document.getElementById("agree-terms").checked;
+  bookPad.setEnabled(on);
+  if (document.getElementById("booking").classList.contains("is-active")) bookPad.size();
+  if (!on) {
+    selfieToken += 1;
+    bookingSelfie = "";
+    stopSelfieCamera();
+    showBookingSelfie("");
+    return;
+  }
+  takeBookingSelfie();
 });
 document.getElementById("agree-credit-terms").addEventListener("change", () => {
   creditPad.setEnabled(document.getElementById("agree-credit-terms").checked);
@@ -915,6 +1008,11 @@ document.getElementById("booking-form").addEventListener("submit", (event) => {
     shake(button);
     return;
   }
+  if (!bookingSelfie) {
+    err.textContent = "Allow the front camera so a photo can be taken.";
+    shake(button);
+    return;
+  }
   person.credits -= total;
   state.bookings.push({
     id: uid(),
@@ -929,6 +1027,7 @@ document.getElementById("booking-form").addEventListener("submit", (event) => {
     damageAnswers: [],
     credits: total,
     signature: bookPad.dataURL(),
+    selfie: bookingSelfie,
   });
   save();
   paddleId = "";
@@ -1018,6 +1117,8 @@ function clearBooking() {
   delete customer.dataset.label;
   document.getElementById("agree-terms").checked = false;
   bookPad.setEnabled(false);
+  bookingSelfie = "";
+  showBookingSelfie("");
   document.getElementById("book-error").textContent = "";
   document.getElementById("book-date").dataset.value = todayISO();
   render();

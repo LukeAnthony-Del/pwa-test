@@ -435,12 +435,36 @@
         place-items: center;
         cursor: pointer;
       }
+      .signature-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .signature-selfie {
+        width: 84px;
+        height: 112px;
+        object-fit: cover;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        flex: none;
+        background: var(--navy-soft);
+      }
       .signature-view {
-        width: 100%;
+        width: auto;
+        flex: 1;
+        min-width: 0;
         height: auto;
         background: var(--white);
         border: 1px solid var(--line);
         border-radius: 12px;
+      }
+      .booking-selfie {
+        width: 56px;
+        height: 72px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        margin-top: 8px;
       }
       .review-swipe.is-reviewed .swipe-front { padding-right: 36px; }
       .review-edit {
@@ -611,9 +635,12 @@
               </div>
             </div>
           </div>
-          <div class="agree">
-            <input id="agree-terms" type="checkbox" aria-label="I have read and agreed to the terms and conditions" />
-            <p>I have read and agreed to the <button type="button" class="terms-link" id="open-terms">terms and conditions</button></p>
+          <div>
+            <div class="agree">
+              <input id="agree-terms" type="checkbox" aria-label="I have read and agreed to the terms and conditions" />
+              <p>I have read and agreed to the <button type="button" class="terms-link" id="open-terms">terms and conditions</button></p>
+            </div>
+            <img id="booking-selfie" class="booking-selfie" alt="Photo taken for this booking" hidden />
           </div>
           <div class="sign-block is-locked" id="sign-block">
             <div class="field-label">Signature</div>
@@ -802,7 +829,10 @@
     <div class="modal" id="signature-modal" hidden>
       <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="signature-title">
         <h2 id="signature-title">Signature</h2>
-        <img class="signature-view" id="signature-image" alt="Customer signature" />
+        <div class="signature-row">
+          <img class="signature-selfie" id="signature-selfie" alt="Customer photo" hidden />
+          <img class="signature-view" id="signature-image" alt="Customer signature" />
+        </div>
         <p class="empty" id="signature-missing" hidden>No signature was saved for this booking.</p>
         <button class="btn" type="button" id="signature-close">Close</button>
       </div>
