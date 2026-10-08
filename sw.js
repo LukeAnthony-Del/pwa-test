@@ -1,4 +1,4 @@
-const CACHE = "pickle-central-v20";
+const CACHE = "pickle-central-v21";
 const ASSETS = ["./","index.html","app.js","manifest.json","icon-192.png","icon-512.png","logo.png","success.mp3","credit-icon.png"];
 
 self.addEventListener("install", (event) => {
