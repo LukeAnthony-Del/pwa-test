@@ -510,6 +510,9 @@ function renderReviews() {
           ${reviewed
             ? `<button type="button" class="review-edit" data-review="${esc(booking.id)}" aria-label="Edit review">✏️</button>`
             : `<button type="button" class="btn review-go" data-review="${esc(booking.id)}">Review</button>`}
+          <button type="button" class="review-sign" data-sign="${esc(booking.id)}" aria-label="View signature">
+            <svg width="26" height="22" viewBox="0 0 26 22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3.2l3.4 3.4L9.2 15.8H5.8v-3.4L15 3.2z"/><path d="M13.6 4.6l2.4 2.4"/><path d="M3 19c1.8-1.7 2.6 1.5 4.2 0s2.6 1.6 4.2 0 2.6 1.6 4.2 0 2.4 1.5 4 0 2.2 1.4 3.4-.2"/></svg>
+          </button>
         </div>
       </article>`;
     })
@@ -518,6 +521,10 @@ function renderReviews() {
   box.querySelectorAll("[data-review]").forEach((btn) => {
     btn.addEventListener("pointerdown", (event) => event.stopPropagation());
     btn.addEventListener("click", () => openReview(btn.dataset.review));
+  });
+  box.querySelectorAll("[data-sign]").forEach((btn) => {
+    btn.addEventListener("pointerdown", (event) => event.stopPropagation());
+    btn.addEventListener("click", () => openSignature(btn.dataset.sign));
   });
   box.querySelectorAll("[data-refund]").forEach((btn) => {
     btn.addEventListener("click", () => refundBooking(btn.dataset.refund));
@@ -547,6 +554,17 @@ function refundBooking(id) {
 
 let damageBookingId = "";
 let reviewBookingId = "";
+
+function openSignature(id) {
+  const booking = state.bookings.find((item) => item.id === id);
+  const img = document.getElementById("signature-image");
+  const missing = document.getElementById("signature-missing");
+  const has = Boolean(booking && typeof booking.signature === "string" && booking.signature.startsWith("data:image"));
+  img.hidden = !has;
+  missing.hidden = has;
+  img.src = has ? booking.signature : "";
+  document.getElementById("signature-modal").hidden = false;
+}
 
 function openReview(id) {
   if (!state.bookings.some((item) => item.id === id)) return;
@@ -842,6 +860,12 @@ document.getElementById("review-bad").addEventListener("click", () => {
   openDamage(id);
 });
 document.getElementById("review-cancel").addEventListener("click", closeReview);
+document.getElementById("signature-close").addEventListener("click", () => {
+  document.getElementById("signature-modal").hidden = true;
+});
+document.getElementById("signature-modal").addEventListener("click", (event) => {
+  if (event.target.id === "signature-modal") document.getElementById("signature-modal").hidden = true;
+});
 document.getElementById("review-modal").addEventListener("click", (event) => {
   if (event.target.id === "review-modal") closeReview();
 });

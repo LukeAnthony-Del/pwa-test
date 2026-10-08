@@ -415,11 +415,33 @@
       .stock-row input { width: 88px; text-align: center; }
       .review-body { flex: 1; min-width: 0; }
       .review-body b { display: block; font-size: 16px; }
-      .review-swipe .swipe-front { align-items: center; background: var(--white); border: 2px solid var(--navy); }
+      .review-swipe .swipe-front { align-items: flex-start; background: var(--white); border: 2px solid var(--navy); padding-bottom: 36px; }
       .review-swipe.is-pending .swipe-front { background: #fde8e8; border: 2px solid var(--danger); box-shadow: none; }
       .review-swipe.is-pending .review-body b,
       .review-swipe.is-pending .review-meta { color: var(--danger); }
-      .review-go { width: auto; padding: 8px 12px; flex: none; }
+      .review-go { width: auto; padding: 8px 12px; flex: none; align-self: flex-start; }
+      .review-sign {
+        position: absolute;
+        right: 8px;
+        bottom: 6px;
+        z-index: 2;
+        width: 32px;
+        height: 26px;
+        border: 0;
+        background: transparent;
+        color: var(--navy);
+        padding: 0;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+      }
+      .signature-view {
+        width: 100%;
+        height: auto;
+        background: var(--white);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+      }
       .review-swipe.is-reviewed .swipe-front { padding-right: 36px; }
       .review-edit {
         position: absolute;
@@ -775,6 +797,14 @@
           <button class="btn" type="submit">Save expense</button>
         </form>
         <button class="btn ghost" type="button" id="expense-cancel">Cancel</button>
+      </div>
+    </div>
+    <div class="modal" id="signature-modal" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="signature-title">
+        <h2 id="signature-title">Signature</h2>
+        <img class="signature-view" id="signature-image" alt="Customer signature" />
+        <p class="empty" id="signature-missing" hidden>No signature was saved for this booking.</p>
+        <button class="btn" type="button" id="signature-close">Close</button>
       </div>
     </div>
     <div class="modal" id="review-modal" hidden>
