@@ -279,7 +279,7 @@ function renderExpenses() {
       </article>`
     )
     .join("");
-  box.querySelectorAll(".swipe").forEach(bindSwipe);
+  box.querySelectorAll(".swipe").forEach((row) => bindSwipe(row));
   box.querySelectorAll(".swipe-bin").forEach((btn) => {
     btn.addEventListener("click", () => {
       const row = btn.closest(".swipe");
@@ -299,18 +299,20 @@ function bindSwipe(row, openPx = 76) {
   let dx = 0;
   let dragging = false;
   let horizontal = false;
-  front.addEventListener("pointerdown", (event) => {
-    startX = event.clientX;
-    startY = event.clientY;
+
+  function down(x, y) {
+    startX = x;
+    startY = y;
     dx = 0;
     dragging = true;
     horizontal = false;
     front.style.transition = "none";
-  });
-  front.addEventListener("pointermove", (event) => {
+  }
+
+  function move(x, y, event) {
     if (!dragging) return;
-    const mx = event.clientX - startX;
-    const my = event.clientY - startY;
+    const mx = x - startX;
+    const my = y - startY;
     if (!horizontal) {
       if (Math.abs(mx) < 8 && Math.abs(my) < 8) return;
       if (Math.abs(my) > Math.abs(mx)) {
@@ -321,23 +323,54 @@ function bindSwipe(row, openPx = 76) {
       }
       horizontal = true;
     }
+    if (event.cancelable) event.preventDefault();
     const base = row.classList.contains("is-open") ? openPx : 0;
-    const next = Math.max(-12, Math.min(openPx + 20, base + mx));
+    const next = Math.max(0, Math.min(openPx, base + mx));
     dx = mx;
     front.style.transform = `translateX(${next}px)`;
-  });
+  }
+
   function finish() {
     if (!dragging && !horizontal) return;
     dragging = false;
-    front.style.transition = "";
-    front.style.transform = "";
     const base = row.classList.contains("is-open") ? openPx : 0;
-    row.classList.toggle("is-open", base + dx > openPx / 2);
+    const open = base + dx > openPx / 2;
+    row.classList.toggle("is-open", open);
+    front.style.transition = "";
+    front.style.transform = open ? `translateX(${openPx}px)` : "";
     dx = 0;
     horizontal = false;
   }
-  front.addEventListener("pointerup", finish);
-  front.addEventListener("pointercancel", finish);
+
+  front.addEventListener("touchstart", (event) => {
+    if (event.touches.length !== 1) return;
+    down(event.touches[0].clientX, event.touches[0].clientY);
+  }, { passive: true });
+  front.addEventListener("touchmove", (event) => {
+    const touch = event.touches[0];
+    if (!touch) return;
+    move(touch.clientX, touch.clientY, event);
+  }, { passive: false });
+  front.addEventListener("touchend", finish);
+  front.addEventListener("touchcancel", finish);
+
+  front.addEventListener("pointerdown", (event) => {
+    if (event.pointerType === "touch") return;
+    down(event.clientX, event.clientY);
+    front.setPointerCapture(event.pointerId);
+  });
+  front.addEventListener("pointermove", (event) => {
+    if (event.pointerType === "touch") return;
+    move(event.clientX, event.clientY, event);
+  });
+  front.addEventListener("pointerup", (event) => {
+    if (event.pointerType === "touch") return;
+    finish();
+  });
+  front.addEventListener("pointercancel", (event) => {
+    if (event.pointerType === "touch") return;
+    finish();
+  });
 }
 
 function renderPacks() {
