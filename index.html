@@ -469,16 +469,20 @@
       .review-swipe.is-reviewed .swipe-front { padding-right: 36px; }
       .review-edit {
         position: absolute;
-        top: 4px;
-        right: 6px;
+        top: 6px;
+        right: 8px;
         z-index: 2;
+        width: 28px;
+        height: 28px;
         border: 0;
         background: transparent;
-        font-size: 15px;
-        line-height: 1;
-        padding: 2px;
+        color: var(--navy);
+        padding: 0;
+        display: grid;
+        place-items: center;
         cursor: pointer;
       }
+      .review-swipe.is-refunded .review-edit { color: #7d8ba0; }
       .review-swipe.is-refunded .swipe-front {
         background: #e4e9ef;
         border-color: #c3ccd6;

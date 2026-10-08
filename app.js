@@ -508,7 +508,7 @@ function renderReviews() {
             ${summary ? `<div class="review-summary">${esc(summary)}</div>` : ""}
           </div>
           ${reviewed
-            ? `<button type="button" class="review-edit" data-review="${esc(booking.id)}" aria-label="Edit review">✏️</button>`
+            ? `<button type="button" class="review-edit" data-review="${esc(booking.id)}" aria-label="Edit review"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>`
             : `<button type="button" class="btn review-go" data-review="${esc(booking.id)}">Review</button>`}
           <button type="button" class="review-sign" data-sign="${esc(booking.id)}" aria-label="View signature">
             <svg width="26" height="22" viewBox="0 0 26 22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3.2l3.4 3.4L9.2 15.8H5.8v-3.4L15 3.2z"/><path d="M13.6 4.6l2.4 2.4"/><path d="M3 19c1.8-1.7 2.6 1.5 4.2 0s2.6 1.6 4.2 0 2.6 1.6 4.2 0 2.4 1.5 4 0 2.2 1.4 3.4-.2"/></svg>
