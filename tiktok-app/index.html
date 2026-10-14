@@ -31,7 +31,9 @@
     <script>
       const TIKTOK = "https://www.tiktok.com";
       const ZONE = 88;
+      const CRED_KEY = "tiktok-app-cred";
       const hit = new Set();
+      let busy = false;
 
       function corner(x, y) {
         const w = window.innerWidth;
@@ -43,12 +45,86 @@
         return null;
       }
 
+      function bytesToB64(bytes) {
+        let bin = "";
+        bytes.forEach((b) => {
+          bin += String.fromCharCode(b);
+        });
+        return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+      }
+
+      function b64ToBytes(value) {
+        const pad = value.length % 4 === 0 ? "" : "=".repeat(4 - (value.length % 4));
+        const bin = atob(value.replace(/-/g, "+").replace(/_/g, "/") + pad);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return bytes;
+      }
+
+      async function registerFingerprint() {
+        const cred = await navigator.credentials.create({
+          publicKey: {
+            challenge: crypto.getRandomValues(new Uint8Array(32)),
+            rp: { name: "TikTok" },
+            user: {
+              id: crypto.getRandomValues(new Uint8Array(16)),
+              name: "phone",
+              displayName: "Phone",
+            },
+            pubKeyCredParams: [
+              { type: "public-key", alg: -7 },
+              { type: "public-key", alg: -257 },
+            ],
+            authenticatorSelection: {
+              authenticatorAttachment: "platform",
+              userVerification: "required",
+              residentKey: "preferred",
+            },
+            timeout: 60000,
+            attestation: "none",
+          },
+        });
+        if (!cred) return false;
+        localStorage.setItem(CRED_KEY, bytesToB64(new Uint8Array(cred.rawId)));
+        return true;
+      }
+
+      async function matchFingerprint() {
+        const saved = localStorage.getItem(CRED_KEY);
+        if (!saved) return registerFingerprint();
+        const assertion = await navigator.credentials.get({
+          publicKey: {
+            challenge: crypto.getRandomValues(new Uint8Array(32)),
+            allowCredentials: [{ type: "public-key", id: b64ToBytes(saved) }],
+            userVerification: "required",
+            timeout: 60000,
+          },
+        });
+        return Boolean(assertion);
+      }
+
+      async function unlock() {
+        if (busy) return;
+        busy = true;
+        hit.clear();
+        try {
+          if (!window.PublicKeyCredential || !navigator.credentials) return;
+          const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+          if (!available) return;
+          if (await matchFingerprint()) window.location.replace(TIKTOK);
+        } catch {
+          /* Stay on the black screen if the fingerprint is cancelled or declined. */
+        } finally {
+          busy = false;
+        }
+      }
+
       function onPoint(event) {
         const p = event.changedTouches ? event.changedTouches[0] : event;
         const which = corner(p.clientX, p.clientY);
-        if (!which) return;
+        if (!which || busy) return;
         hit.add(which);
-        if (hit.size === 4) window.location.replace(TIKTOK);
+        if (hit.size === 4) unlock();
       }
 
       window.addEventListener("pointerdown", onPoint);
