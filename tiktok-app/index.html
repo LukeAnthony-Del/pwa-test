@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="TikTok" />
+    <title>TikTok</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="icon-192.png" type="image/png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <style>
+      html, body {
+        margin: 0;
+        height: 100%;
+        background: #000;
+        overflow: hidden;
+        touch-action: manipulation;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      body {
+        min-height: 100vh;
+        min-height: 100dvh;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      const TIKTOK = "https://www.tiktok.com";
+      const ZONE = 88;
+      const hit = new Set();
+
+      function corner(x, y) {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        if (x <= ZONE && y <= ZONE) return "tl";
+        if (x >= w - ZONE && y <= ZONE) return "tr";
+        if (x <= ZONE && y >= h - ZONE) return "bl";
+        if (x >= w - ZONE && y >= h - ZONE) return "br";
+        return null;
+      }
+
+      function onPoint(event) {
+        const p = event.changedTouches ? event.changedTouches[0] : event;
+        const which = corner(p.clientX, p.clientY);
+        if (!which) return;
+        hit.add(which);
+        if (hit.size === 4) window.location.replace(TIKTOK);
+      }
+
+      window.addEventListener("pointerdown", onPoint);
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("./sw.js");
+      }
+    </script>
+  </body>
+</html>
