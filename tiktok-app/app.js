@@ -1,20 +1,26 @@
-const BUILTIN = [
-  { id: "7gV-0be8WqE", handle: "missfoxyasmr", name: "miss foxy", caption: "Real vs fake mango cracking #asmr #satisfying #mango", likes: 980000, comments: 6200, saves: 74000, shares: 21000 },
-  { id: "ou0nl5ET0HA", handle: "dameuniverse", name: "Dame Universe", caption: "That hooper who says they're just shoes #basketball #kobe #fyp", likes: 151957, comments: 1680, saves: 12400, shares: 4200 },
-  { id: "DQYc93f7FJw", handle: "TravelPleasure.", name: "Travel Pleasure", caption: "Best places to visit in Italy #shorts #travel #italy", likes: 98000, comments: 1400, saves: 22000, shares: 6400 },
-  { id: "tyBJvOsaVys", handle: "louisgantus", name: "Louis Gantus", caption: "He hates this #cooking #food #recipe", likes: 241000, comments: 3100, saves: 18600, shares: 5400 },
-  { id: "-OTqZWLJO9s", handle: "Tech_Foodie", name: "Tech Foodie", caption: "Ice + salt experiment #scienceexperiment #shorts", likes: 540000, comments: 4700, saves: 31000, shares: 9800 },
-  { id: "pyAejtUlKPA", handle: "ashkan_ws", name: "Ashkan Sadeghi", caption: "Giant beluga fish with rice 🐟🔥🍚 #fish #cooking #shorts", likes: 1600000, comments: 11200, saves: 88000, shares: 24000 },
-  { id: "himxIytMI5I", handle: "HatrickX", name: "HatrickX", caption: "Basketball moments 😅 #basketball #nba #shorts", likes: 840, comments: 22, saves: 60, shares: 18 },
-  { id: "pP44i6A2Kds", handle: "JasminandJames", name: "Jasmin and James", caption: "Dreams come true 😳😍 #puppy #cat #kitten #pets", likes: 22000, comments: 480, saves: 3100, shares: 860 },
-  { id: "K3UGd3By864", handle: "941krew", name: "941 KREW", caption: "Love Park legend #skateboarding #skate #shorts", likes: 186, comments: 8, saves: 14, shares: 4 },
-  { id: "fu5jboOyNH0", handle: "Rookie.Ranks2", name: "rookie ranks", caption: "Ranking the most satisfying videos 🧼 #satisfying #asmr", likes: 4100, comments: 90, saves: 610, shares: 140 },
-  { id: "Zi1WqiSLLKE", handle: "TinyShorts-w5l", name: "Tiny Shorts", caption: "Travel spots with whale sharks that look unreal 🤯 #travel #nature", likes: 74, comments: 3, saves: 9, shares: 2 },
-  { id: "F-n0Zp0GBKA", handle: "oyefoodievlogs", name: "Oye Foodie Vlogs", caption: "Agra famous barule, just ₹10 😍 #streetfood #food #shorts", likes: 87000, comments: 960, saves: 5400, shares: 1200 },
-  { id: "vQ3NZZ8hhbs", handle: "ashleymarkleeats", name: "Ashley Markle Eats", caption: "Viral pumpkin cheese dip 🧀🎃 #recipe #cooking #snacks", likes: 18000, comments: 240, saves: 4100, shares: 730 },
-  { id: "x-T_35ijqX0", handle: "TrainSmartDog", name: "Train Smart Dog", caption: "This puppy swims, jumps, and climbs back out 🐕 #puppy #germanshepherd", likes: 9200, comments: 140, saves: 860, shares: 210 },
-  { id: "4BrrdNc3DqU", handle: "FKnowra-t2q", name: "Knowra", caption: "Most beautiful places on earth 😱✨ #adventure #travel #nature", likes: 1200, comments: 36, saves: 280, shares: 70 },
-];
+const SHORTS_API = "https://yt.chocolatemoo53.com";
+const CRED_KEY = "tt-fingerprint";
+const TOPICS = ["cooking", "travel", "funny", "animals", "sports", "music", "food", "nature", "dance", "tech", "basketball", "ocean"];
+
+function hashStats(id) {
+  let h = 2166136261;
+  for (const ch of id) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
+  h >>>= 0;
+  return {
+    likes: 1200 + (h % 850000),
+    comments: 8 + (h % 9000),
+    saves: 40 + (h % 70000),
+    shares: 12 + (h % 20000),
+  };
+}
+
+const STARTER = {
+  id: "Q8m8dKKnHF4",
+  handle: "BBCComedyGreats",
+  name: "BBC Comedy Greats",
+  caption: "Don't mention the war | Fawlty Towers | BBC Comedy Greats",
+  ...hashStats("Q8m8dKKnHF4"),
+};
 
 const SEEDS = [
   ["alex", "I watched this way too many times"],
@@ -60,6 +66,19 @@ let toastTimer = 0;
 let lastTap = 0;
 let tapTimer = 0;
 let commentFor = null;
+let unlocked = false;
+let fingerBusy = false;
+const sessionFriends = [];
+const manual = [];
+const live = [];
+const seenIds = new Set([STARTER.id]);
+let pool = [];
+let poolCursor = 0;
+let poolReady = false;
+let pumping = false;
+let liveFailed = false;
+let topicIndex = 0;
+const channelJobs = [];
 
 function load(key, fallback) {
   try {
@@ -112,15 +131,12 @@ function isId(id) {
   return /^[A-Za-z0-9_-]{11}$/.test(id);
 }
 
-function addedVideos() {
-  return load("tt-added", []).filter((video) => video && isId(video.id));
-}
-
 function catalog() {
   const seen = new Set();
   const list = [];
-  for (const video of [...addedVideos(), ...BUILTIN]) {
-    if (!isId(video.id) || seen.has(video.id)) continue;
+  const source = unlocked ? [STARTER, ...manual, ...live] : [STARTER, ...manual];
+  for (const video of source) {
+    if (!video || !isId(video.id) || seen.has(video.id)) continue;
     seen.add(video.id);
     list.push(video);
   }
@@ -210,6 +226,8 @@ function slideHtml(video) {
 
 function bindPosters() {
   scroller.querySelectorAll(".poster").forEach((img) => {
+    if (img.dataset.bound) return;
+    img.dataset.bound = "1";
     img.addEventListener("error", () => {
       if (img.dataset.fallback && img.src !== img.dataset.fallback) img.src = img.dataset.fallback;
     });
@@ -364,6 +382,7 @@ function setActive(index) {
   if (index < 0 || !slideCount()) return;
   if (index === activeIndex) {
     syncAll();
+    if (unlocked && feedMode === "foryou" && index >= slideCount() - 2) pumpLive();
     return;
   }
   userPaused = false;
@@ -371,6 +390,7 @@ function setActive(index) {
   scroller.querySelectorAll(".slide").forEach((slide) => slide.classList.remove("is-paused", "is-active"));
   slideAt(index)?.classList.add("is-active");
   syncAll();
+  if (unlocked && feedMode === "foryou" && index >= slideCount() - 2) pumpLive();
 }
 
 function enableSound() {
@@ -664,9 +684,9 @@ async function addShort(raw) {
       handle = slug.replace(/^@/, "");
     }
   } catch { /* keep the fallback label */ }
-  const added = addedVideos();
-  added.unshift({ id, handle, name: author, caption: title, likes: 0, comments: 0, saves: 0, shares: 0 });
-  save("tt-added", added);
+  const video = asVideo({ id, handle, name: author, caption: title });
+  seenIds.add(id);
+  manual.unshift(video);
   closeSheet();
   feedMode = "foryou";
   screen = "feed";
@@ -688,19 +708,231 @@ function openVideo(id) {
   }
 }
 
-function renderFriends() {
-  const people = [];
-  const seen = new Set();
-  for (const video of catalog()) {
-    if (seen.has(video.handle)) continue;
-    seen.add(video.handle);
-    people.push(video);
+function asVideo(raw) {
+  return {
+    ...hashStats(raw.id),
+    id: raw.id,
+    handle: raw.handle || "youtube",
+    name: raw.name || "YouTube",
+    caption: raw.caption || "Short",
+  };
+}
+
+function isSimon(name) {
+  return name.trim().replace(/\s+/g, " ").toLowerCase() === "simon devera";
+}
+
+function bytesToB64(bytes) {
+  let bin = "";
+  bytes.forEach((b) => { bin += String.fromCharCode(b); });
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function b64ToBytes(value) {
+  const pad = value.length % 4 === 0 ? "" : "=".repeat(4 - (value.length % 4));
+  const bin = atob(value.replace(/-/g, "+").replace(/_/g, "/") + pad);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
+async function verifyFingerprint() {
+  if (!window.PublicKeyCredential || !navigator.credentials) return "unsupported";
+  const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+  if (!available) return "unsupported";
+  const saved = localStorage.getItem(CRED_KEY);
+  if (!saved) {
+    const cred = await navigator.credentials.create({
+      publicKey: {
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        rp: { name: "TikTok" },
+        user: {
+          id: crypto.getRandomValues(new Uint8Array(16)),
+          name: "phone",
+          displayName: "Phone",
+        },
+        pubKeyCredParams: [
+          { type: "public-key", alg: -7 },
+          { type: "public-key", alg: -257 },
+        ],
+        authenticatorSelection: {
+          authenticatorAttachment: "platform",
+          userVerification: "required",
+          residentKey: "preferred",
+        },
+        timeout: 60000,
+        attestation: "none",
+      },
+    });
+    if (!cred) return false;
+    localStorage.setItem(CRED_KEY, bytesToB64(new Uint8Array(cred.rawId)));
+    return true;
   }
-  const followed = follows();
-  document.querySelector("#friends").innerHTML = `<div class="page"><h1>Friends</h1><p class="muted">Suggested accounts</p>${people.map((person) => {
-    const on = !!followed[person.handle];
-    return `<div class="row"><button class="avatar" type="button" data-action="open-handle" data-handle="${escapeHtml(person.handle)}" style="--h:${hue(person.handle)}">${initial(person.name)}</button><button type="button" data-action="open-handle" data-handle="${escapeHtml(person.handle)}" style="background:none;border:0;color:#fff;text-align:left;padding:0"><b>${escapeHtml(person.name)}</b><small>@${escapeHtml(person.handle)}</small></button><button class="follow${on ? " on" : ""}" type="button" data-action="follow" data-handle="${escapeHtml(person.handle)}">${on ? "Following" : "Follow"}</button></div>`;
-  }).join("")}</div>`;
+  const assertion = await navigator.credentials.get({
+    publicKey: {
+      challenge: crypto.getRandomValues(new Uint8Array(32)),
+      allowCredentials: [{ type: "public-key", id: b64ToBytes(saved) }],
+      userVerification: "required",
+      timeout: 60000,
+    },
+  });
+  return Boolean(assertion);
+}
+
+async function loadPool() {
+  if (poolReady) return;
+  try {
+    const response = await fetch("./shorts.json");
+    if (response.ok) pool = await response.json();
+  } catch { /* The live Shorts source can still continue the feed. */ }
+  poolReady = true;
+}
+
+function takePool(count) {
+  const out = [];
+  while (out.length < count && poolCursor < pool.length) {
+    const video = asVideo(pool[poolCursor++]);
+    if (!isId(video.id) || seenIds.has(video.id)) continue;
+    seenIds.add(video.id);
+    out.push(video);
+  }
+  return out;
+}
+
+async function fetchJson(url) {
+  const response = await fetch(url, { signal: AbortSignal.timeout(12000) });
+  if (!response.ok) throw new Error(String(response.status));
+  return response.json();
+}
+
+async function fetchLiveBatch(want) {
+  const found = [];
+  let guard = 0;
+  while (found.length < want && guard < 8) {
+    guard += 1;
+    if (!channelJobs.length) {
+      const topic = TOPICS[topicIndex % TOPICS.length];
+      topicIndex += 1;
+      const channels = await fetchJson(`${SHORTS_API}/api/v1/search?q=${encodeURIComponent(topic)}&type=channel`);
+      const channel = (Array.isArray(channels) ? channels : []).find((item) => item.authorId);
+      if (!channel) continue;
+      channelJobs.push({ id: channel.authorId, continuation: "" });
+    }
+    const job = channelJobs[0];
+    const path = job.continuation
+      ? `${SHORTS_API}/api/v1/channels/${job.id}/shorts?continuation=${encodeURIComponent(job.continuation)}`
+      : `${SHORTS_API}/api/v1/channels/${job.id}/shorts`;
+    let data;
+    try {
+      data = await fetchJson(path);
+    } catch {
+      channelJobs.shift();
+      continue;
+    }
+    const videos = Array.isArray(data.videos) ? data.videos : [];
+    if (data.continuation) job.continuation = data.continuation;
+    else channelJobs.shift();
+    if (!videos.length) continue;
+    for (const item of videos) {
+      const seconds = item.lengthSeconds || 0;
+      if (!isId(item.videoId) || seenIds.has(item.videoId) || seconds > 70) continue;
+      seenIds.add(item.videoId);
+      found.push(asVideo({
+        id: item.videoId,
+        handle: String(item.author || "youtube").replace(/\s+/g, "").slice(0, 28),
+        name: item.author || "YouTube",
+        caption: item.title || "Short",
+      }));
+      if (found.length >= want) break;
+    }
+  }
+  return found;
+}
+
+function appendSlides(videos) {
+  if (!videos.length || !scroller.querySelector(".slide")) return;
+  const chunk = document.createElement("div");
+  chunk.innerHTML = videos.map((video) => slideHtml(video)).join("");
+  const slides = [...chunk.children];
+  slides.forEach((slide) => scroller.appendChild(slide));
+  bindPosters();
+  sizeSlides();
+}
+
+async function pumpLive() {
+  if (!unlocked || pumping) return;
+  const pooled = takePool(8);
+  if (pooled.length) {
+    live.push(...pooled);
+    if (screen === "feed" && feedMode === "foryou") appendSlides(pooled);
+    return;
+  }
+  pumping = true;
+  try {
+    const fresh = await fetchLiveBatch(8);
+    if (!fresh.length) return;
+    live.push(...fresh);
+    if (screen === "feed" && feedMode === "foryou") appendSlides(fresh);
+  } catch {
+    if (!liveFailed) {
+      liveFailed = true;
+      toast("Couldn't load more Shorts");
+    }
+  } finally {
+    pumping = false;
+  }
+}
+
+async function startUnlimited() {
+  await loadPool();
+  const first = takePool(10);
+  live.push(...first);
+  feedMode = "foryou";
+  showScreen("feed");
+  renderFeed(false);
+  pumpLive();
+}
+
+async function addFriend(name) {
+  const clean = name.trim().replace(/\s+/g, " ");
+  if (!clean) return;
+  if (sessionFriends.some((person) => person.name.toLowerCase() === clean.toLowerCase())) {
+    toast("Already added");
+    return;
+  }
+  if (!isSimon(clean)) {
+    sessionFriends.push({ name: clean });
+    renderFriends();
+    return;
+  }
+  if (fingerBusy) return;
+  fingerBusy = true;
+  toast("Use your fingerprint");
+  try {
+    const ok = await verifyFingerprint();
+    if (ok === "unsupported") {
+      toast("This phone has no fingerprint or face unlock");
+      return;
+    }
+    if (!ok) {
+      toast("Fingerprint didn't unlock the feed");
+      return;
+    }
+    sessionFriends.push({ name: "Simon Devera" });
+    unlocked = true;
+    renderFriends();
+    toast("Feed unlocked");
+    await startUnlimited();
+  } catch {
+    toast("Fingerprint didn't unlock the feed");
+  } finally {
+    fingerBusy = false;
+  }
+}
+
+function renderFriends() {
+  const rows = sessionFriends.map((person) => `<div class="row"><div class="avatar" style="--h:${hue(person.name)}">${initial(person.name)}</div><div><b>${escapeHtml(person.name)}</b><small>${isSimon(person.name) ? "Feed unlocked" : "Friend"}</small></div></div>`).join("");
+  document.querySelector("#friends").innerHTML = `<div class="page"><h1>Friends</h1><form class="add-friend" data-form="friend"><input name="name" maxlength="40" placeholder="Add a person" autocomplete="off" enterkeyhint="done" /><button type="submit">Add</button></form>${rows || `<p class="muted">People you add show up here.</p>`}</div>`;
 }
 
 function renderInbox() {
@@ -915,6 +1147,7 @@ app.addEventListener("submit", (event) => {
   event.preventDefault();
   if (form.dataset.form === "comment") sendComment(form.elements.text.value);
   if (form.dataset.form === "add") addShort(form.elements.url.value);
+  if (form.dataset.form === "friend") addFriend(form.elements.name.value);
   if (form.dataset.form === "profile") {
     const name = form.elements.name.value.trim() || "You";
     const handle = (form.elements.handle.value.trim() || "you").replace(/^@/, "").replace(/\s+/g, "");
@@ -951,6 +1184,18 @@ ytScript.onerror = () => toast("Can't reach YouTube right now");
 document.head.appendChild(ytScript);
 
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js");
+
+window.addEventListener("pageshow", (event) => {
+  if (!event.persisted) return;
+  unlocked = false;
+  sessionFriends.splice(0);
+  manual.splice(0);
+  live.splice(0);
+  poolCursor = 0;
+  seenIds.clear();
+  seenIds.add(STARTER.id);
+  renderFeed(false);
+});
 
 paintInboxDot();
 renderFeed(false);

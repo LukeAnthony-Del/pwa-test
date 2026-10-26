@@ -453,6 +453,27 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
 .page h1 { margin: 0 0 14px; font-size: 24px; letter-spacing: -.03em; }
 
+.add-friend { display: flex; gap: 8px; margin: 0 0 18px; }
+
+.add-friend input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  border-radius: 8px;
+  background: #1e1e1e;
+  padding: 12px;
+  font-size: 16px;
+}
+
+.add-friend button {
+  border: 0;
+  border-radius: 8px;
+  background: var(--pink);
+  color: #fff;
+  font-weight: 700;
+  padding: 0 16px;
+}
+
 .subtabs { display: flex; gap: 18px; margin-bottom: 16px; }
 
 .subtabs button {

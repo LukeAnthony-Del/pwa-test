@@ -1,9 +1,10 @@
-const CACHE = "tiktok-app-v5";
+const CACHE = "tiktok-app-v6";
 const ASSETS = [
   "./",
   "index.html",
   "styles.css",
   "app.js",
+  "shorts.json",
   "manifest.json",
   "icon-192.png",
   "icon-512.png",
