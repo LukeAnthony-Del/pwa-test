@@ -8,8 +8,8 @@ Home screen name: **Pickle Central**
 
 Open that URL in Chrome on your phone, then Install / Add to Home Screen. After later updates, reopen the app (or visit the same URL) to get the new version.
 
-**TikTok launcher:** https://lukeanthony-del.github.io/pwa-test/tiktok-app/
+**Shorts feed:** https://lukeanthony-del.github.io/pwa-test/tiktok-app/
 
-Install that page to your home screen. Opening the installed icon sends you to https://www.tiktok.com.
+Install that page to your home screen. The For You feed is a TikTok-style swipe stack that plays YouTube Shorts in YouTube's player. The + button accepts a Shorts link. If a previously installed copy still shows a black screen, open the page once more so the updated app can replace it.
 
 Repo: https://github.com/LukeAnthony-Del/pwa-test

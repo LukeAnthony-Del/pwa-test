@@ -2,135 +2,65 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" />
     <meta name="theme-color" content="#000000" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="TikTok" />
     <title>TikTok</title>
     <link rel="manifest" href="manifest.json" />
     <link rel="icon" href="icon-192.png" type="image/png" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <style>
-      html, body {
-        margin: 0;
-        height: 100%;
-        background: #000;
-        overflow: hidden;
-        touch-action: manipulation;
-        -webkit-user-select: none;
-        user-select: none;
-      }
-      body {
-        min-height: 100vh;
-        min-height: 100dvh;
-      }
-    </style>
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <script>
-      const TIKTOK = "https://www.tiktok.com";
-      const ZONE = 88;
-      const CRED_KEY = "tiktok-app-cred";
-      const hit = new Set();
-      let busy = false;
+    <div id="app">
+      <section id="feed" class="screen on">
+        <header class="topbar">
+          <div class="top-tabs">
+            <button type="button" data-action="mode" data-mode="following">Following</button>
+            <button type="button" class="on" data-action="mode" data-mode="foryou">For You</button>
+          </div>
+          <button type="button" class="search-btn" data-action="search" aria-label="Search">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.25" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16.2 20.2 20.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </header>
+        <button type="button" id="sound" class="sound-hint" data-action="sound">Tap for sound</button>
+        <div id="scroller" class="scroller"></div>
+      </section>
 
-      function corner(x, y) {
-        const w = window.innerWidth;
-        const h = window.innerHeight;
-        if (x <= ZONE && y <= ZONE) return "tl";
-        if (x >= w - ZONE && y <= ZONE) return "tr";
-        if (x <= ZONE && y >= h - ZONE) return "bl";
-        if (x >= w - ZONE && y >= h - ZONE) return "br";
-        return null;
-      }
+      <section id="friends" class="screen"></section>
+      <section id="inbox" class="screen"></section>
+      <section id="profile" class="screen"></section>
 
-      function bytesToB64(bytes) {
-        let bin = "";
-        bytes.forEach((b) => {
-          bin += String.fromCharCode(b);
-        });
-        return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
-      }
+      <nav class="dock" aria-label="Main">
+        <button type="button" class="on" data-action="screen" data-screen="feed">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.6 12 4l8 6.6V20a1 1 0 0 1-1 1h-4.6v-6.1H9.6V21H5a1 1 0 0 1-1-1v-9.4z" fill="currentColor"/></svg>
+          <span>Home</span>
+        </button>
+        <button type="button" data-action="screen" data-screen="friends">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="16.1" cy="9" r="1.9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.6 18.6c.7-2.5 2.5-3.7 4.4-3.7s3.7 1.2 4.4 3.7M13.2 14.4c1.1-.5 2.3-.6 3.3-.2 1.3.5 2.2 1.7 2.6 3.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <span>Friends</span>
+        </button>
+        <button type="button" class="create" data-action="add" aria-label="Add a Short">
+          <i></i><b></b><span>+</span>
+        </button>
+        <button type="button" data-action="screen" data-screen="inbox">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.8 7.2h14.4v9.4a1 1 0 0 1-1 1H5.8a1 1 0 0 1-1-1V7.2z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m4.8 8 7.2 5 7.2-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+          <span>Inbox</span>
+          <em id="inbox-dot" class="dot" hidden></em>
+        </button>
+        <button type="button" data-action="screen" data-screen="profile">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.1" r="2.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6.2 19c.8-2.6 2.8-4 5.8-4s5 1.4 5.8 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <span>Profile</span>
+        </button>
+      </nav>
 
-      function b64ToBytes(value) {
-        const pad = value.length % 4 === 0 ? "" : "=".repeat(4 - (value.length % 4));
-        const bin = atob(value.replace(/-/g, "+").replace(/_/g, "/") + pad);
-        const bytes = new Uint8Array(bin.length);
-        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-        return bytes;
-      }
-
-      async function registerFingerprint() {
-        const cred = await navigator.credentials.create({
-          publicKey: {
-            challenge: crypto.getRandomValues(new Uint8Array(32)),
-            rp: { name: "TikTok" },
-            user: {
-              id: crypto.getRandomValues(new Uint8Array(16)),
-              name: "phone",
-              displayName: "Phone",
-            },
-            pubKeyCredParams: [
-              { type: "public-key", alg: -7 },
-              { type: "public-key", alg: -257 },
-            ],
-            authenticatorSelection: {
-              authenticatorAttachment: "platform",
-              userVerification: "required",
-              residentKey: "preferred",
-            },
-            timeout: 60000,
-            attestation: "none",
-          },
-        });
-        if (!cred) return false;
-        localStorage.setItem(CRED_KEY, bytesToB64(new Uint8Array(cred.rawId)));
-        return true;
-      }
-
-      async function matchFingerprint() {
-        const saved = localStorage.getItem(CRED_KEY);
-        if (!saved) return registerFingerprint();
-        const assertion = await navigator.credentials.get({
-          publicKey: {
-            challenge: crypto.getRandomValues(new Uint8Array(32)),
-            allowCredentials: [{ type: "public-key", id: b64ToBytes(saved) }],
-            userVerification: "required",
-            timeout: 60000,
-          },
-        });
-        return Boolean(assertion);
-      }
-
-      async function unlock() {
-        if (busy) return;
-        busy = true;
-        hit.clear();
-        try {
-          if (!window.PublicKeyCredential || !navigator.credentials) return;
-          const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-          if (!available) return;
-          if (await matchFingerprint()) window.location.replace(TIKTOK);
-        } catch {
-          /* Stay on the black screen if the fingerprint is cancelled or declined. */
-        } finally {
-          busy = false;
-        }
-      }
-
-      function onPoint(event) {
-        const p = event.changedTouches ? event.changedTouches[0] : event;
-        const which = corner(p.clientX, p.clientY);
-        if (!which || busy) return;
-        hit.add(which);
-        if (hit.size === 4) unlock();
-      }
-
-      window.addEventListener("pointerdown", onPoint);
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("./sw.js");
-      }
-    </script>
+      <div id="backdrop" class="backdrop" data-action="close" hidden></div>
+      <div id="sheet" class="sheet" hidden></div>
+      <div id="search" class="overlay" hidden></div>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </div>
+    <script src="app.js"></script>
   </body>
 </html>
