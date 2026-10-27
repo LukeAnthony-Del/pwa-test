@@ -18,6 +18,7 @@ const STARTER = {
   id: "Q8m8dKKnHF4",
   handle: "BBCComedyGreats",
   name: "BBC Comedy Greats",
+  authorId: "UC7foTxErVJKorAitAcJuqDA",
   caption: "Don't mention the war | Fawlty Towers | BBC Comedy Greats",
   ...hashStats("Q8m8dKKnHF4"),
 };
@@ -33,12 +34,12 @@ const SEEDS = [
   ["morgan", "the sound makes it"],
 ];
 
-const HEART = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.2 4.9 13.4C2.8 11.4 2.7 8.2 4.7 6.2a4.4 4.4 0 0 1 6.4 0L12 7.1l.9-.9a4.4 4.4 0 0 1 6.4 0c2 2 1.9 5.2-.2 7.2L12 20.2z" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>';
-const HEART_LINE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.2 4.9 13.4C2.8 11.4 2.7 8.2 4.7 6.2a4.4 4.4 0 0 1 6.4 0L12 7.1l.9-.9a4.4 4.4 0 0 1 6.4 0c2 2 1.9 5.2-.2 7.2L12 20.2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
-const COMMENT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.2 16.4 4.4 19.6c-.3.5.2 1.1.7.8L9.2 18.7A7.6 7.6 0 1 0 6.2 16.4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+const HEART = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.4c-.4 0-7.7-4.3-9.4-8.4C1.2 8.8 2.5 5.4 5.7 4.6c1.9-.5 3.7.3 5 2.1L12 8.2l1.3-1.5c1.3-1.8 3.1-2.6 5-2.1 3.2.8 4.5 4.2 3.1 7.4-1.7 4.1-9 8.4-9.4 8.4z" fill="currentColor"/></svg>';
+const HEART_LINE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19.6c-.3 0-6.6-3.7-8.1-7.2C2.7 9.6 3.8 6.7 6.5 6c1.6-.4 3.1.2 4.2 1.8L12 9.4l1.3-1.6c1.1-1.6 2.6-2.2 4.2-1.8 2.7.7 3.8 3.6 2.6 6.4-1.5 3.5-7.8 7.2-8.1 7.2z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>';
+const COMMENT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.4a7.4 7.4 0 0 0-6.4 11.1l-1.2 2.9a.7.7 0 0 0 .9.9l2.9-1.2A7.4 7.4 0 1 0 12 4.4z" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="8.7" cy="12" r="1.05" fill="currentColor"/><circle cx="12" cy="12" r="1.05" fill="currentColor"/><circle cx="15.3" cy="12" r="1.05" fill="currentColor"/></svg>';
 const BOOK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.2h10a1 1 0 0 1 1 1V20l-6-3.2L6 20V5.2a1 1 0 0 1 1-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
 const BOOK_ON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.2h10a1 1 0 0 1 1 1V20l-6-3.2L6 20V5.2a1 1 0 0 1 1-1z" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>';
-const SHARE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 5.2 19.2 10 14 14.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19.2 10H10.2A5.2 5.2 0 0 0 5 15.2V19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+const SHARE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.8 4.2c.5-.5 1.4-.1 1.4.6v2.2c2.4.3 6.2 1.8 6.6 6.1.1.8-.8 1.2-1.3.6-1.4-1.6-3.4-2.5-5.3-2.7v2.6c0 .7-.9 1.1-1.4.6l-6.7-5.6a.8.8 0 0 1 0-1.2l6.7-5.2z" fill="currentColor"/></svg>';
 const NOTE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.2V6.4l10-2v10.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="7.2" cy="17.2" r="2.1" fill="currentColor"/><circle cx="17.2" cy="15" r="2.1" fill="currentColor"/></svg>';
 const PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7.2v9.6l8.2-4.8L9 7.2z" fill="#fff"/></svg>';
 
@@ -68,10 +69,23 @@ let tapTimer = 0;
 let commentFor = null;
 let unlocked = false;
 let fingerBusy = false;
+let installPrompt = null;
+let creatorToken = 0;
+let searchTimer = 0;
+let searchToken = 0;
+let searchTerm = "";
+let searchPage = 1;
+let searchDone = false;
+let followTurn = 0;
 const sessionFriends = [];
 const manual = [];
 const live = [];
-const seenIds = new Set([STARTER.id]);
+const followingVideos = [];
+const searchVideos = [];
+const followJobs = [];
+const channelCache = new Map();
+const knownVideos = new Map();
+knownVideos.set(STARTER.id, STARTER);
 let pool = [];
 let poolCursor = 0;
 let poolReady = false;
@@ -99,14 +113,32 @@ function follows() { return load("tt-follows", {}); }
 function comments() { return load("tt-comments", {}); }
 function profile() { return load("tt-profile", { name: "You", handle: "you" }); }
 
+function decodeText(value) {
+  let text = String(value ?? "");
+  const box = document.createElement("textarea");
+  for (let i = 0; i < 2; i++) {
+    box.innerHTML = text;
+    if (box.value === text) break;
+    text = box.value;
+  }
+  return text;
+}
+
 function escapeHtml(value) {
-  return String(value).replace(/[&<>"']/g, (ch) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  return decodeText(value).replace(/[&<>"']/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;",
   }[ch]));
 }
 
 function captionHtml(text) {
-  return escapeHtml(text).replace(/#([\p{L}\p{N}_]+)/gu, '<b class="tag">#$1</b>');
+  return decodeText(text).split(/(#[\p{L}\p{N}_]+)/gu).map((part) => {
+    if (/^#[\p{L}\p{N}_]+$/u.test(part)) return `<b class="tag">${escapeHtml(part)}</b>`;
+    return escapeHtml(part);
+  }).join("");
+}
+
+function cssUrl(url) {
+  return String(url || "").replace(/["\\()]/g, "");
 }
 
 function compact(n) {
@@ -131,11 +163,27 @@ function isId(id) {
   return /^[A-Za-z0-9_-]{11}$/.test(id);
 }
 
-function catalog() {
+const watchedIds = new Set((load("tt-seen", []) || []).filter((id) => isId(id) && id !== STARTER.id));
+const sessionIds = new Set();
+
+function holdId(id) {
+  if (isId(id)) sessionIds.add(id);
+}
+
+function skipFetched(id) {
+  return !isId(id) || id === STARTER.id || watchedIds.has(id) || sessionIds.has(id);
+}
+
+function watchId(id) {
+  if (!unlocked || !isId(id) || id === STARTER.id || watchedIds.has(id)) return;
+  watchedIds.add(id);
+  save("tt-seen", [...watchedIds].slice(-5000));
+}
+
+function everyVideo() {
   const seen = new Set();
   const list = [];
-  const source = unlocked ? [STARTER, ...manual, ...live] : [STARTER, ...manual];
-  for (const video of source) {
+  for (const video of [STARTER, ...manual, ...live, ...followingVideos, ...searchVideos, ...knownVideos.values()]) {
     if (!video || !isId(video.id) || seen.has(video.id)) continue;
     seen.add(video.id);
     list.push(video);
@@ -144,16 +192,18 @@ function catalog() {
 }
 
 function currentList() {
-  const list = catalog();
+  if (feedMode === "search") return searchVideos;
   if (feedMode === "following") {
     const followed = follows();
-    return list.filter((video) => followed[video.handle]);
+    if (unlocked) return followingVideos;
+    return [STARTER, ...manual].filter((video) => followed[video.handle]);
   }
-  return list;
+  if (!unlocked) return [STARTER, ...manual];
+  return [...manual, ...live].filter((video) => video.id !== STARTER.id);
 }
 
 function videoById(id) {
-  return catalog().find((video) => video.id === id);
+  return knownVideos.get(id) || everyVideo().find((video) => video.id === id);
 }
 
 function poster(id) {
@@ -192,7 +242,8 @@ function slideHtml(video) {
   const liked = !!likes()[video.id];
   const saved = !!saves()[video.id];
   const followed = !!follows()[video.handle];
-  const sound = `original sound - ${video.name}`;
+  const sound = `original sound - ${decodeText(video.name)}`;
+  const photo = video.avatar ? ` has-photo" style="--h:${hue(video.handle)};background-image:url('${cssUrl(video.avatar)}')` : `" style="--h:${hue(video.handle)}`;
   return `<article class="slide" data-id="${video.id}">
     <div class="stage">
       <img class="poster" alt="" src="${poster(video.id)}" data-fallback="https://i.ytimg.com/vi/${video.id}/hqdefault.jpg" />
@@ -200,26 +251,25 @@ function slideHtml(video) {
     <div class="hit" data-action="hit"></div>
     <div class="scrim"></div>
     <div class="pause-icon">${PLAY}</div>
-    <div class="tap-play">${PLAY}</div>
     <div class="err">
       <p>This Short can't play here</p>
       <button type="button" data-action="next">Next</button>
     </div>
     <div class="meta">
-      <p class="handle">@${escapeHtml(video.handle)}</p>
+      <button class="handle" type="button" data-action="creator" data-handle="${escapeHtml(video.handle)}">@${escapeHtml(video.handle)}</button>
       <p class="caption" data-action="caption">${captionHtml(video.caption)}</p>
       <div class="sound">${NOTE}<div class="marquee"><span>${escapeHtml(sound)}</span></div></div>
     </div>
     <div class="rail">
       <div class="avatar-wrap${followed ? " followed" : ""}">
-        <button class="avatar" type="button" data-action="creator" data-handle="${escapeHtml(video.handle)}" style="--h:${hue(video.handle)}" aria-label="${escapeHtml(video.name)}">${initial(video.name)}</button>
+        <button class="avatar${photo}" type="button" data-action="creator" data-handle="${escapeHtml(video.handle)}" aria-label="${escapeHtml(video.name)}">${initial(video.name)}</button>
         <button class="plus" type="button" data-action="follow" data-handle="${escapeHtml(video.handle)}" aria-label="Follow">+</button>
       </div>
       <button type="button" data-action="like" class="${liked ? "on" : ""}" aria-label="Like">${liked ? HEART : HEART_LINE}<span class="like-count">${compact(video.likes + (liked ? 1 : 0))}</span></button>
       <button type="button" data-action="comment" aria-label="Comments">${COMMENT}<span class="comment-count">${compact(video.comments + (comments()[video.id] || []).length)}</span></button>
       <button type="button" data-action="save" class="save${saved ? " on" : ""}" aria-label="Save">${saved ? BOOK_ON : BOOK}<span class="save-count">${compact(video.saves + (saved ? 1 : 0))}</span></button>
       <button type="button" data-action="share" aria-label="Share">${SHARE}<span>${compact(video.shares)}</span></button>
-      <div class="disc" aria-hidden="true"></div>
+      <div class="disc" style="background-image:url('${poster(video.id)}')" aria-hidden="true"></div>
     </div>
   </article>`;
 }
@@ -277,150 +327,139 @@ function renderFeed(keepIndex) {
   setActive(next);
 }
 
-function styleFrame(player) {
-  try {
-    const iframe = player.getIframe();
-    iframe.title = "Short";
-    iframe.style.cssText = "position:absolute;inset:0;width:100%;height:100%;border:0;transform:scale(1.14);transform-origin:center center;pointer-events:none;";
-  } catch { /* player not ready */ }
-}
-
 function shouldPlay() {
   return screen === "feed" && !searchOpen && !document.hidden;
 }
 
-function syncOne(index) {
-  const player = players.get(index);
-  if (!player || !ready.has(player)) return;
+function frameSrc(id, autoplay) {
+  const params = new URLSearchParams({
+    autoplay: autoplay ? "1" : "0",
+    mute: "1",
+    controls: "0",
+    rel: "0",
+    modestbranding: "1",
+    playsinline: "1",
+    fs: "0",
+    disablekb: "1",
+    iv_load_policy: "3",
+    cc_load_policy: "0",
+    enablejsapi: "1",
+    origin: location.origin,
+  });
+  return `https://www.youtube.com/embed/${id}?${params}`;
+}
+
+function commandFrame(frame, func, args) {
+  if (!frame?.contentWindow) return;
+  frame.contentWindow.postMessage(JSON.stringify({
+    event: "command",
+    func,
+    args: args || [],
+  }), "*");
+}
+
+function preloadFrame(index) {
   const slide = slideAt(index);
-  const play = index === activeIndex && shouldPlay() && !userPaused;
-  try {
-    if (play) {
-      player.mute();
-      player.playVideo();
-      if (soundOn) player.unMute();
-    } else {
-      player.mute();
-      player.pauseVideo();
-    }
-  } catch { /* ignore player races */ }
-  slide?.classList.toggle("is-active", index === activeIndex);
+  if (!slide || slide.querySelector("iframe")) return;
+  const iframe = document.createElement("iframe");
+  iframe.className = "holder";
+  iframe.title = "Short";
+  iframe.allow = "autoplay; encrypted-media; picture-in-picture";
+  iframe.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
+  const startNow = index === activeIndex || index === activeIndex + 1;
+  iframe.src = frameSrc(slide.dataset.id, startNow);
+  iframe.addEventListener("load", () => {
+    iframe.contentWindow?.postMessage(JSON.stringify({ event: "listening", id: iframe.id || String(index) }), "*");
+    commandFrame(iframe, "unloadModule", ["captions"]);
+    syncOne(index);
+  });
+  slide.querySelector(".stage").appendChild(iframe);
+}
+
+function warmIndexes(index) {
+  const count = slideCount();
+  const list = [];
+  for (const offset of [0, 1, 2, -1]) {
+    const next = index + offset;
+    if (next >= 0 && next < count && !list.includes(next)) list.push(next);
+  }
+  return list;
+}
+
+function syncOne(index) {
+  const slide = slideAt(index);
+  const frame = slide?.querySelector("iframe");
+  if (!slide || !frame) return;
+  const active = index === activeIndex;
+  const warm = index === activeIndex + 1;
+  const play = shouldPlay() && ((active && !userPaused) || warm);
+  slide.classList.toggle("is-active", active);
+  if (play) {
+    commandFrame(frame, "mute");
+    commandFrame(frame, "playVideo");
+    if (active && soundOn && !userPaused) commandFrame(frame, "unMute");
+  } else {
+    commandFrame(frame, "mute");
+    commandFrame(frame, "pauseVideo");
+  }
 }
 
 function syncAll() {
-  const keep = new Set([activeIndex - 1, activeIndex, activeIndex + 1].filter((index) => index >= 0 && index < slideCount()));
-  for (const [index, player] of [...players]) {
-    if (!keep.has(index)) {
-      try { player.destroy(); } catch { /* ignore */ }
-      players.delete(index);
-    }
-  }
-  keep.forEach((index) => ensurePlayer(index));
+  const keep = new Set(warmIndexes(Math.max(activeIndex, 0)));
+  scroller.querySelectorAll(".slide").forEach((slide, index) => {
+    if (!keep.has(index)) slide.querySelector("iframe")?.remove();
+  });
+  keep.forEach((index) => preloadFrame(index));
   keep.forEach((index) => syncOne(index));
 }
 
-function ensurePlayer(index) {
-  if (!ytOk || index < 0 || index >= slideCount() || players.has(index)) return;
-  const slide = slideAt(index);
-  const id = slide.dataset.id;
-  const holder = document.createElement("div");
-  holder.className = "holder";
-  holder.id = "yt" + index + id;
-  slide.querySelector(".stage").appendChild(holder);
-  const player = new YT.Player(holder, {
-    videoId: id,
-    playerVars: {
-      autoplay: 0,
-      controls: 0,
-      rel: 0,
-      modestbranding: 1,
-      playsinline: 1,
-      fs: 0,
-      disablekb: 1,
-      iv_load_policy: 3,
-      cc_load_policy: 0,
-      origin: location.origin,
-    },
-    events: {
-      onReady: (event) => {
-        if (players.get(index) !== player) return;
-        ready.add(player);
-        styleFrame(player);
-        syncOne(index);
-        if (index === activeIndex) {
-          setTimeout(() => {
-            if (index === activeIndex && !slide.classList.contains("is-playing")) slide.classList.add("needs-tap");
-          }, 1800);
-        }
-      },
-      onStateChange: (event) => {
-        if (players.get(index) !== player) return;
-        if (event.data === YT.PlayerState.PLAYING) {
-          slide.classList.add("is-playing");
-          slide.classList.remove("needs-tap");
-          if (index === activeIndex) slide.classList.remove("is-paused");
-        }
-        if (event.data === YT.PlayerState.ENDED) {
-          try { player.seekTo(0, true); player.playVideo(); } catch { /* ignore */ }
-        }
-      },
-      onError: () => {
-        slide.classList.add("is-error");
-        slide.classList.remove("needs-tap");
-        if (index === activeIndex && slideCount() > 1) {
-          setTimeout(() => {
-            if (index === activeIndex) go(index >= slideCount() - 1 ? -1 : 1);
-          }, 500);
-        }
-      },
-    },
-  });
-  players.set(index, player);
+function pumpIfNeeded(index) {
+  if (!unlocked || index < slideCount() - 2) return;
+  if (feedMode === "foryou") pumpLive();
+  else if (feedMode === "following") pumpFollowing();
+  else if (feedMode === "search") pumpSearch();
 }
 
 function setActive(index) {
   if (index < 0 || !slideCount()) return;
   if (index === activeIndex) {
     syncAll();
-    if (unlocked && feedMode === "foryou" && index >= slideCount() - 2) pumpLive();
+    pumpIfNeeded(index);
     return;
   }
   userPaused = false;
   activeIndex = index;
   scroller.querySelectorAll(".slide").forEach((slide) => slide.classList.remove("is-paused", "is-active"));
-  slideAt(index)?.classList.add("is-active");
+  const slide = slideAt(index);
+  slide?.classList.add("is-active");
+  if (slide?.dataset.id) watchId(slide.dataset.id);
+  const handle = slide?.querySelector("[data-action='creator']")?.dataset.handle;
+  if (handle) resolveChannel(handle).then((meta) => { if (meta) paintAvatar(handle, meta); });
   syncAll();
-  if (unlocked && feedMode === "foryou" && index >= slideCount() - 2) pumpLive();
+  pumpIfNeeded(index);
 }
 
 function enableSound() {
   soundOn = true;
   soundBtn.hidden = true;
-  const player = players.get(activeIndex);
-  if (player && ready.has(player)) {
-    try { player.unMute(); player.playVideo(); } catch { /* ignore */ }
-  }
+  userPaused = false;
+  slideAt(activeIndex)?.classList.remove("is-paused");
+  syncOne(activeIndex);
 }
 
 function togglePause() {
-  const player = players.get(activeIndex);
   const slide = slideAt(activeIndex);
-  if (!player || !ready.has(player)) {
-    userPaused = false;
-    slide?.classList.remove("needs-tap");
-    syncAll();
-    return;
-  }
-  const state = player.getPlayerState();
-  if (state === YT.PlayerState.PLAYING) {
+  const frame = slide?.querySelector("iframe");
+  if (!slide || !frame) return;
+  if (slide.classList.contains("is-playing") && !userPaused) {
     userPaused = true;
-    player.pauseVideo();
-    slide?.classList.add("is-paused");
+    slide.classList.add("is-paused");
+    commandFrame(frame, "pauseVideo");
   } else {
     userPaused = false;
-    if (soundOn) player.unMute();
-    player.playVideo();
-    slide?.classList.remove("is-paused", "needs-tap");
+    slide.classList.remove("is-paused");
+    if (soundOn) commandFrame(frame, "unMute");
+    commandFrame(frame, "playVideo");
   }
 }
 
@@ -490,10 +529,21 @@ function toggleSave(id) {
 
 function toggleFollow(handle) {
   const map = follows();
-  if (map[handle]) delete map[handle];
-  else {
-    map[handle] = true;
+  if (map[handle]) {
+    delete map[handle];
+    const jobAt = followJobs.findIndex((job) => job.handle === handle);
+    if (jobAt >= 0) followJobs.splice(jobAt, 1);
+  } else {
+    const video = everyVideo().find((item) => item.handle === handle);
+    map[handle] = {
+      handle,
+      name: video?.name || handle,
+      authorId: video?.authorId || "",
+      avatar: video?.avatar || "",
+      description: "",
+    };
     pushActivity(`You followed @${handle}`);
+    resolveChannel(handle).then((meta) => { if (meta) paintAvatar(handle, meta); });
   }
   save("tt-follows", map);
   scroller.querySelectorAll("[data-handle]").forEach((node) => {
@@ -501,7 +551,7 @@ function toggleFollow(handle) {
     node.closest(".avatar-wrap")?.classList.toggle("followed", !!map[handle]);
   });
   toast(map[handle] ? "Following" : "Unfollowed");
-  if (feedMode === "following") renderFeed(true);
+  if (feedMode === "following") setFeedMode("following");
   if (screen === "friends") renderFriends();
 }
 
@@ -622,22 +672,50 @@ function copyLink(url) {
   closeSheet();
 }
 
-function openCreator(handle) {
-  const videos = catalog().filter((video) => video.handle === handle);
-  const person = videos[0];
-  if (!person) return;
-  const followed = !!follows()[handle];
-  openSheet(`<div class="grab"></div>
+function creatorSheet(handle, name, description, avatar, followed, videos) {
+  const photo = avatar ? ` has-photo" style="--h:${hue(handle)};background-image:url('${cssUrl(avatar)}')` : `" style="--h:${hue(handle)}`;
+  const bio = description ? `<p class="bio">${escapeHtml(description)}</p>` : "";
+  const grid = videos.length
+    ? `<div class="grid">${videos.map((video) => `<button type="button" data-action="open" data-id="${video.id}" style="background-image:url('${poster(video.id)}')" aria-label="${escapeHtml(video.caption)}"></button>`).join("")}</div>`
+    : "";
+  return `<div class="grab"></div>
     <header>@${escapeHtml(handle)}<button type="button" data-action="close" aria-label="Close">×</button></header>
     <div class="body">
       <div class="profile-head">
-        <div class="avatar" style="--h:${hue(handle)}">${initial(person.name)}</div>
-        <h2 style="margin:0">${escapeHtml(person.name)}</h2>
+        <div class="avatar${photo}">${initial(name)}</div>
+        <h2 style="margin:0">${escapeHtml(name)}</h2>
         <p class="muted">@${escapeHtml(handle)}</p>
+        ${bio}
         <button class="follow${followed ? " on" : ""}" type="button" data-action="follow" data-handle="${escapeHtml(handle)}">${followed ? "Following" : "Follow"}</button>
       </div>
-      <div class="grid">${videos.map((video) => `<button type="button" data-action="open" data-id="${video.id}" style="background-image:url('${poster(video.id)}')" aria-label="Play"></button>`).join("")}</div>
-    </div>`);
+      ${grid}
+    </div>`;
+}
+
+async function openCreator(handle) {
+  const known = everyVideo().filter((video) => video.handle === handle);
+  const person = known[0] || { name: handle, avatar: "" };
+  const saved = follows()[handle];
+  const savedMeta = saved && saved !== true ? saved : null;
+  const token = ++creatorToken;
+  openSheet(creatorSheet(handle, savedMeta?.name || person.name, savedMeta?.description || "", savedMeta?.avatar || person.avatar || "", !!saved, known));
+  const meta = await resolveChannel(handle);
+  if (!meta || token !== creatorToken || !sheetOpen) return;
+  let shorts = known;
+  try {
+    const data = await fetchJson(`${SHORTS_API}/api/v1/channels/${meta.authorId}/shorts`);
+    const extra = (data.videos || []).slice(0, 18).filter((item) => isId(item.videoId)).map((item) => asVideo({
+      id: item.videoId,
+      handle,
+      name: meta.name,
+      caption: item.title,
+      authorId: meta.authorId,
+      avatar: meta.avatar,
+    }));
+    if (extra.length) shorts = extra;
+  } catch { /* keep the videos already on screen */ }
+  if (token !== creatorToken || !sheetOpen) return;
+  openSheet(creatorSheet(handle, meta.name || person.name, meta.description || "", meta.avatar || "", !!follows()[handle], shorts));
 }
 
 function openAdd() {
@@ -665,7 +743,7 @@ async function addShort(raw) {
     toast("Paste a YouTube Shorts link");
     return;
   }
-  if (catalog().some((video) => video.id === id)) {
+  if (currentList().some((video) => video.id === id) || manual.some((video) => video.id === id)) {
     closeSheet();
     openVideo(id);
     toast("Already in your feed");
@@ -685,7 +763,7 @@ async function addShort(raw) {
     }
   } catch { /* keep the fallback label */ }
   const video = asVideo({ id, handle, name: author, caption: title });
-  seenIds.add(id);
+  holdId(id);
   manual.unshift(video);
   closeSheet();
   feedMode = "foryou";
@@ -696,12 +774,18 @@ async function addShort(raw) {
 }
 
 function openVideo(id) {
-  feedMode = "foryou";
+  const video = videoById(id);
+  if (!video) return;
+  if (!currentList().some((item) => item.id === id)) {
+    holdId(id);
+    manual.unshift(video);
+    feedMode = "foryou";
+  }
   closeSheet();
   closeSearch();
   showScreen("feed");
   renderFeed(false);
-  const index = currentList().findIndex((video) => video.id === id);
+  const index = currentList().findIndex((item) => item.id === id);
   if (index >= 0) {
     scroller.scrollTop = index * scroller.clientHeight;
     setActive(index);
@@ -709,13 +793,89 @@ function openVideo(id) {
 }
 
 function asVideo(raw) {
-  return {
+  const video = {
     ...hashStats(raw.id),
     id: raw.id,
-    handle: raw.handle || "youtube",
-    name: raw.name || "YouTube",
-    caption: raw.caption || "Short",
+    handle: String(raw.handle || "youtube").replace(/^@/, ""),
+    name: decodeText(raw.name || "YouTube"),
+    caption: decodeText(raw.caption || "Short"),
+    authorId: raw.authorId || "",
+    avatar: raw.avatar || "",
   };
+  const prior = knownVideos.get(video.id);
+  if (prior) {
+    prior.name = video.name || prior.name;
+    prior.caption = video.caption || prior.caption;
+    prior.authorId = prior.authorId || video.authorId;
+    prior.avatar = prior.avatar || video.avatar;
+    if (video.handle && video.handle !== "youtube") prior.handle = video.handle;
+    return prior;
+  }
+  knownVideos.set(video.id, video);
+  return video;
+}
+
+function bestThumb(list) {
+  if (!Array.isArray(list) || !list.length) return "";
+  return [...list].sort((a, b) => (b.width || 0) - (a.width || 0))[0]?.url || "";
+}
+
+function paintAvatar(handle, meta) {
+  if (!meta?.avatar) return;
+  document.querySelectorAll(".avatar").forEach((node) => {
+    if (node.dataset.handle !== handle) return;
+    node.classList.add("has-photo");
+    node.style.backgroundImage = `url("${cssUrl(meta.avatar)}")`;
+  });
+}
+
+function normHandle(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+async function resolveChannel(handle) {
+  if (!handle) return null;
+  if (channelCache.has(handle)) return channelCache.get(handle);
+  const job = fetchChannel(handle);
+  channelCache.set(handle, job);
+  return job;
+}
+
+async function fetchChannel(handle) {
+  try {
+    const video = everyVideo().find((item) => item.handle === handle && item.authorId);
+    const saved = follows()[handle];
+    let authorId = (saved && saved.authorId) || video?.authorId || "";
+    if (!authorId) {
+      const list = await fetchJson(`${SHORTS_API}/api/v1/search?q=${encodeURIComponent(handle)}&type=channel`);
+      const items = Array.isArray(list) ? list : [];
+      const wanted = normHandle(handle);
+      const hit = items.find((item) => normHandle(item.author) === wanted || normHandle(item.authorUrl).includes(wanted)) || items[0];
+      authorId = hit?.authorId || "";
+    }
+    if (!authorId) return null;
+    const full = await fetchJson(`${SHORTS_API}/api/v1/channels/${authorId}`);
+    const record = {
+      handle,
+      authorId,
+      name: decodeText(full.author || handle),
+      description: decodeText(full.description || ""),
+      avatar: bestThumb(full.authorThumbnails),
+    };
+    const map = follows();
+    if (map[handle]) {
+      map[handle] = record;
+      save("tt-follows", map);
+    }
+    everyVideo().forEach((item) => {
+      if (item.handle === handle && record.avatar) item.avatar = record.avatar;
+    });
+    paintAvatar(handle, record);
+    return record;
+  } catch {
+    channelCache.delete(handle);
+    return null;
+  }
 }
 
 function isSimon(name) {
@@ -791,10 +951,10 @@ async function loadPool() {
 function takePool(count) {
   const out = [];
   while (out.length < count && poolCursor < pool.length) {
-    const video = asVideo(pool[poolCursor++]);
-    if (!isId(video.id) || seenIds.has(video.id)) continue;
-    seenIds.add(video.id);
-    out.push(video);
+    const raw = pool[poolCursor++];
+    if (skipFetched(raw.id)) continue;
+    holdId(raw.id);
+    out.push(asVideo(raw));
   }
   return out;
 }
@@ -835,13 +995,15 @@ async function fetchLiveBatch(want) {
     if (!videos.length) continue;
     for (const item of videos) {
       const seconds = item.lengthSeconds || 0;
-      if (!isId(item.videoId) || seenIds.has(item.videoId) || seconds > 70) continue;
-      seenIds.add(item.videoId);
+      if (skipFetched(item.videoId) || seconds > 70) continue;
+      holdId(item.videoId);
       found.push(asVideo({
         id: item.videoId,
         handle: String(item.author || "youtube").replace(/\s+/g, "").slice(0, 28),
         name: item.author || "YouTube",
         caption: item.title || "Short",
+        authorId: item.authorId || job.id,
+        avatar: bestThumb(item.authorThumbnails),
       }));
       if (found.length >= want) break;
     }
@@ -857,6 +1019,7 @@ function appendSlides(videos) {
   slides.forEach((slide) => scroller.appendChild(slide));
   bindPosters();
   sizeSlides();
+  syncAll();
 }
 
 async function pumpLive() {
@@ -891,6 +1054,167 @@ async function startUnlimited() {
   showScreen("feed");
   renderFeed(false);
   pumpLive();
+}
+
+async function fetchFollowBatch(want) {
+  const handles = Object.keys(follows());
+  for (const handle of handles) {
+    if (followJobs.some((job) => job.handle === handle)) continue;
+    const saved = follows()[handle];
+    const authorId = saved && saved.authorId;
+    if (authorId) {
+      followJobs.push({ handle, authorId, name: saved.name || handle, continuation: "", stall: 0 });
+    } else {
+      const meta = await resolveChannel(handle);
+      if (meta?.authorId) followJobs.push({ handle, authorId: meta.authorId, name: meta.name || handle, continuation: "", stall: 0 });
+    }
+  }
+  for (let i = followJobs.length - 1; i >= 0; i--) {
+    if (!follows()[followJobs[i].handle]) followJobs.splice(i, 1);
+  }
+  const found = [];
+  let guard = 0;
+  while (found.length < want && followJobs.length && guard < 8) {
+    guard += 1;
+    const job = followJobs[followTurn % followJobs.length];
+    followTurn += 1;
+    const path = job.continuation
+      ? `${SHORTS_API}/api/v1/channels/${job.authorId}/shorts?continuation=${encodeURIComponent(job.continuation)}`
+      : `${SHORTS_API}/api/v1/channels/${job.authorId}/shorts`;
+    let data;
+    try {
+      data = await fetchJson(path);
+    } catch {
+      job.dead = true;
+      continue;
+    }
+    const videos = Array.isArray(data.videos) ? data.videos : [];
+    const previous = job.continuation;
+    if (data.continuation && data.continuation !== previous) job.continuation = data.continuation;
+    else if (!data.continuation) job.dead = true;
+    let added = 0;
+    for (const item of videos) {
+      const seconds = item.lengthSeconds || 0;
+      if (skipFetched(item.videoId) || seconds > 70) continue;
+      holdId(item.videoId);
+      added += 1;
+      found.push(asVideo({
+        id: item.videoId,
+        handle: job.handle,
+        name: item.author || job.name,
+        caption: item.title || "Short",
+        authorId: item.authorId || job.authorId,
+        avatar: follows()[job.handle]?.avatar || "",
+      }));
+      if (found.length >= want) break;
+    }
+    job.stall = added ? 0 : (job.stall || 0) + 1;
+    if (job.stall >= 2) job.dead = true;
+  }
+  for (let i = followJobs.length - 1; i >= 0; i--) {
+    if (followJobs[i].dead) followJobs.splice(i, 1);
+  }
+  return found;
+}
+
+async function pumpFollowing() {
+  if (!unlocked || pumping) return;
+  pumping = true;
+  try {
+    const fresh = await fetchFollowBatch(8);
+    if (!fresh.length) return;
+    followingVideos.push(...fresh);
+    if (screen === "feed" && feedMode === "following" && scroller.querySelector(".slide")) appendSlides(fresh);
+  } catch {
+    toast("Couldn't load Shorts from people you follow");
+  } finally {
+    pumping = false;
+  }
+}
+
+async function fetchSearchBatch(want) {
+  const found = [];
+  let guard = 0;
+  while (found.length < want && !searchDone && guard < 5) {
+    guard += 1;
+    let data;
+    try {
+      data = await fetchJson(`${SHORTS_API}/api/v1/search?q=${encodeURIComponent(searchTerm)}&type=video&duration=short&page=${searchPage}`);
+    } catch {
+      searchDone = true;
+      break;
+    }
+    searchPage += 1;
+    const items = Array.isArray(data) ? data : [];
+    if (!items.length) {
+      searchDone = true;
+      break;
+    }
+    for (const item of items) {
+      const seconds = item.lengthSeconds || 0;
+      if (skipFetched(item.videoId) || seconds > 70) continue;
+      holdId(item.videoId);
+      found.push(asVideo({
+        id: item.videoId,
+        handle: String(item.author || "youtube").replace(/\s+/g, "").slice(0, 28),
+        name: item.author || "YouTube",
+        caption: item.title || "Short",
+        authorId: item.authorId || "",
+        avatar: bestThumb(item.authorThumbnails),
+      }));
+      if (found.length >= want) break;
+    }
+    if (searchPage > 12) searchDone = true;
+  }
+  return found;
+}
+
+async function pumpSearch() {
+  if (pumping || searchDone || !searchTerm) return;
+  pumping = true;
+  try {
+    const fresh = await fetchSearchBatch(8);
+    if (!fresh.length) return;
+    searchVideos.push(...fresh);
+    if (screen === "feed" && feedMode === "search" && scroller.querySelector(".slide")) appendSlides(fresh);
+  } catch {
+    toast("Couldn't load more Shorts");
+  } finally {
+    pumping = false;
+  }
+}
+
+async function runSearch(term) {
+  const clean = decodeText(term).trim();
+  if (!clean) return;
+  searchTerm = clean;
+  searchPage = 1;
+  searchDone = false;
+  searchVideos.splice(0);
+  feedMode = "search";
+  closeSearch();
+  showScreen("feed");
+  document.querySelectorAll("[data-mode]").forEach((button) => button.classList.remove("on"));
+  scroller.innerHTML = `<div class="empty"><h2>Searching</h2><p>${escapeHtml(clean)}</p></div>`;
+  const fresh = await fetchSearchBatch(8);
+  if (feedMode !== "search" || searchTerm !== clean) return;
+  searchVideos.push(...fresh);
+  renderFeed(false);
+  if (!fresh.length) toast("No Shorts for that");
+}
+
+async function setFeedMode(mode) {
+  feedMode = mode;
+  showScreen("feed");
+  if (mode === "following" && unlocked && !followingVideos.length) {
+    document.querySelectorAll("[data-mode]").forEach((button) => {
+      button.classList.toggle("on", button.dataset.mode === "following");
+    });
+    scroller.innerHTML = `<div class="empty"><h2>Loading Shorts</h2><p>From people you follow.</p></div>`;
+    await pumpFollowing();
+    if (feedMode !== "following") return;
+  }
+  renderFeed(false);
 }
 
 async function addFriend(name) {
@@ -951,13 +1275,37 @@ function renderInbox() {
 
 function renderProfile() {
   const me = profile();
-  const liked = catalog().filter((video) => likes()[video.id]);
-  const saved = catalog().filter((video) => saves()[video.id]);
+  const liked = everyVideo().filter((video) => likes()[video.id]);
+  const saved = everyVideo().filter((video) => saves()[video.id]);
   const list = profileTab === "liked" ? liked : saved;
   const cells = list.length
     ? list.map((video) => `<button type="button" data-action="open" data-id="${video.id}" style="background-image:url('${poster(video.id)}')" aria-label="${escapeHtml(video.caption)}"></button>`).join("")
     : `<div class="blank">${profileTab === "liked" ? "Videos you like will appear here." : "Saved videos will appear here."}</div>`;
-  document.querySelector("#profile").innerHTML = `<div class="page"><div class="profile-head"><div class="avatar" style="--h:${hue(me.handle)}">${initial(me.name)}</div><h1 style="margin-bottom:4px">${escapeHtml(me.name)}</h1><p class="muted" style="margin-top:0">@${escapeHtml(me.handle)}</p><button class="ghost" type="button" data-action="edit-profile">Edit profile</button></div><div class="stats"><div><b>${compact(Object.keys(follows()).length)}</b><span>Following</span></div><div><b>0</b><span>Followers</span></div><div><b>${compact(liked.length)}</b><span>Likes</span></div></div><div class="subtabs" style="justify-content:center"><button type="button" data-action="profile-tab" data-tab="liked" class="${profileTab === "liked" ? "on" : ""}">Liked</button><button type="button" data-action="profile-tab" data-tab="saved" class="${profileTab === "saved" ? "on" : ""}">Saved</button></div>${list.length ? `<div class="grid">${cells}</div>` : cells}</div>`;
+  const installLabel = installedAlready() ? "Installed" : "Install";
+  document.querySelector("#profile").innerHTML = `<div class="page"><div class="profile-head"><div class="avatar" style="--h:${hue(me.handle)}">${initial(me.name)}</div><h1 style="margin-bottom:4px">${escapeHtml(me.name)}</h1><p class="muted" style="margin-top:0">@${escapeHtml(me.handle)}</p><button class="ghost" type="button" data-action="edit-profile">Edit profile</button><button class="primary install-btn" type="button" data-action="install">${installLabel}</button></div><div class="stats"><div><b>${compact(Object.keys(follows()).length)}</b><span>Following</span></div><div><b>0</b><span>Followers</span></div><div><b>${compact(liked.length)}</b><span>Likes</span></div></div><div class="subtabs" style="justify-content:center"><button type="button" data-action="profile-tab" data-tab="liked" class="${profileTab === "liked" ? "on" : ""}">Liked</button><button type="button" data-action="profile-tab" data-tab="saved" class="${profileTab === "saved" ? "on" : ""}">Saved</button></div>${list.length ? `<div class="grid">${cells}</div>` : cells}</div>`;
+}
+
+function installedAlready() {
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+}
+
+async function installApp() {
+  if (installedAlready()) {
+    toast("Already on your home screen");
+    return;
+  }
+  if (installPrompt) {
+    installPrompt.prompt();
+    try { await installPrompt.userChoice; } catch { /* The prompt was dismissed. */ }
+    installPrompt = null;
+    if (screen === "profile") renderProfile();
+    return;
+  }
+  if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
+    openSheet(`<div class="grab"></div><header>Install<button type="button" data-action="close" aria-label="Close">×</button></header><div class="body"><p>In Safari, tap Share, then <b>Add to Home Screen</b>.</p></div>`);
+    return;
+  }
+  toast("Open the browser menu and choose Install app");
 }
 
 function openEditProfile() {
@@ -986,10 +1334,10 @@ function showScreen(name) {
   if (name === "profile") renderProfile();
   if (name === "feed") syncAll();
   else {
-    for (const player of players.values()) {
-      if (!ready.has(player)) continue;
-      try { player.mute(); player.pauseVideo(); } catch { /* ignore */ }
-    }
+    scroller.querySelectorAll("iframe").forEach((frame) => {
+      commandFrame(frame, "mute");
+      commandFrame(frame, "pauseVideo");
+    });
   }
 }
 
@@ -1000,21 +1348,41 @@ function resultRow(video) {
 function openSearch() {
   searchOpen = true;
   searchLayer.hidden = false;
-  searchLayer.innerHTML = `<div class="search-bar"><input type="search" placeholder="Search or paste a Shorts link" autocomplete="off" /><button type="button" data-action="close-search">Cancel</button></div><div class="results"></div>`;
+  searchLayer.innerHTML = `<div class="search-bar"><input type="search" placeholder="Search Shorts" autocomplete="off" enterkeyhint="search" /><button type="button" data-action="close-search">Cancel</button></div><div class="results"></div>`;
   const input = searchLayer.querySelector("input");
   const results = searchLayer.querySelector(".results");
-  const paint = () => {
-    const query = input.value.trim().toLowerCase();
-    const id = parseId(input.value);
-    const extra = id ? `<button class="row" type="button" data-action="add-query"><span class="avatar" style="--h:330">+</span><span><b>Add this Short</b><small>${escapeHtml(id)}</small></span></button>` : "";
-    const matches = catalog().filter((video) => {
-      if (!query) return true;
-      const blob = `${video.handle} ${video.name} ${video.caption}`.toLowerCase();
-      return blob.includes(query);
-    }).slice(0, 20);
-    results.innerHTML = extra + (matches.map(resultRow).join("") || `<div class="blank">No videos match that.</div>`);
+  const paint = async () => {
+    const token = ++searchToken;
+    const query = input.value.trim();
+    const id = parseId(query);
+    if (!query) {
+      results.innerHTML = `<div class="blank">Search for a sound, a creator, or a topic.</div>`;
+      return;
+    }
+    if (id) {
+      results.innerHTML = `<button class="row" type="button" data-action="add-query"><span class="avatar" style="--h:330">+</span><span><b>Add this Short</b><small>${escapeHtml(id)}</small></span></button>`;
+      return;
+    }
+    results.innerHTML = `<div class="blank">Looking for “${escapeHtml(query)}”…</div>`;
+    let suggestions = [query];
+    try {
+      const data = await fetchJson(`${SHORTS_API}/api/v1/search/suggestions?q=${encodeURIComponent(query)}`);
+      if (Array.isArray(data.suggestions) && data.suggestions.length) suggestions = data.suggestions.slice(0, 12);
+    } catch { /* The typed words are still a search. */ }
+    if (token !== searchToken) return;
+    results.innerHTML = suggestions.map((item) => `<button class="suggest" type="button" data-action="suggest" data-q="${escapeHtml(item)}"><b>${escapeHtml(item)}</b><small>Shorts</small></button>`).join("");
   };
-  input.addEventListener("input", paint);
+  input.addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(paint, 180);
+  });
+  input.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    const id = parseId(input.value);
+    if (id) addShort(input.value);
+    else runSearch(input.value);
+  });
   paint();
   input.focus();
   syncAll();
@@ -1080,9 +1448,7 @@ app.addEventListener("click", (event) => {
   const slide = target.closest(".slide");
   const id = target.dataset.id || slide?.dataset.id || activeId();
   if (action === "mode") {
-    feedMode = target.dataset.mode;
-    showScreen("feed");
-    renderFeed(false);
+    setFeedMode(target.dataset.mode);
   } else if (action === "screen") {
     closeSearch();
     if (target.dataset.screen === "feed" && screen === "feed") {
@@ -1126,11 +1492,12 @@ app.addEventListener("click", (event) => {
     openAdd();
   } else if (action === "add-query") {
     addShort(searchLayer.querySelector("input")?.value || "");
+  } else if (action === "suggest") {
+    runSearch(target.dataset.q || "");
   } else if (action === "open" && id) {
     openVideo(id);
-  } else if (action === "open-handle") {
-    const first = catalog().find((video) => video.handle === target.dataset.handle);
-    if (first) openVideo(first.id);
+  } else if (action === "install") {
+    installApp();
   } else if (action === "inbox-tab") {
     inboxTab = target.dataset.tab;
     renderInbox();
@@ -1171,17 +1538,53 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "l" || event.key === "L") { const id = activeId(); if (id) toggleLike(id, false); }
 });
 
-let ytSettled = false;
-window.onYouTubeIframeAPIReady = () => {
-  if (ytSettled) return;
-  ytSettled = true;
-  ytOk = true;
-  if (screen === "feed") setActive(activeIndex < 0 ? 0 : activeIndex);
-};
-const ytScript = document.createElement("script");
-ytScript.src = "https://www.youtube.com/iframe_api";
-ytScript.onerror = () => toast("Can't reach YouTube right now");
-document.head.appendChild(ytScript);
+window.addEventListener("message", (event) => {
+  if (!String(event.origin).includes("youtube.com")) return;
+  let data = event.data;
+  if (typeof data === "string") {
+    try { data = JSON.parse(data); } catch { return; }
+  }
+  if (!data || typeof data !== "object") return;
+  const frame = [...scroller.querySelectorAll("iframe")].find((node) => node.contentWindow === event.source);
+  const slide = frame?.closest(".slide");
+  if (!slide) return;
+  const state = data.event === "onStateChange"
+    ? Number(data.info)
+    : (data.event === "infoDelivery" ? Number(data.info?.playerState) : NaN);
+  if (state === 1) {
+    slide.classList.add("is-playing");
+    commandFrame(frame, "unloadModule", ["captions"]);
+    if (slide.classList.contains("is-active") && !userPaused) slide.classList.remove("is-paused");
+  }
+  if (state === 0) {
+    commandFrame(frame, "seekTo", [0, true]);
+    commandFrame(frame, "playVideo");
+  }
+  if (data.event === "onError") {
+    const code = Number(data.info);
+    if (code === 5) return;
+    slide.classList.add("is-error");
+    const slides = [...scroller.querySelectorAll(".slide")];
+    const index = slides.indexOf(slide);
+    if (index === activeIndex && slides.length > 1) {
+      setTimeout(() => {
+        if (index === activeIndex) go(index >= slides.length - 1 ? -1 : 1);
+      }, 400);
+    }
+  }
+});
+
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  installPrompt = event;
+  if (screen === "profile") renderProfile();
+});
+
+window.addEventListener("appinstalled", () => {
+  installPrompt = null;
+  toast("Installed");
+  if (screen === "profile") renderProfile();
+});
 
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js");
 
@@ -1191,9 +1594,13 @@ window.addEventListener("pageshow", (event) => {
   sessionFriends.splice(0);
   manual.splice(0);
   live.splice(0);
+  followingVideos.splice(0);
+  searchVideos.splice(0);
+  followJobs.splice(0);
   poolCursor = 0;
-  seenIds.clear();
-  seenIds.add(STARTER.id);
+  sessionIds.clear();
+  feedMode = "foryou";
+  searchTerm = "";
   renderFeed(false);
 });
 
