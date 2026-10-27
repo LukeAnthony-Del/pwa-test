@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" />
+    <meta name="theme-color" content="#14362c" />
+    <meta name="description" content="Luke Messages keeps your imported texts, calls, and contacts on this device." />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Luke Messages" />
+    <title>Luke Messages</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="icon-192.png" type="image/png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="top">
+        <h1>Luke Messages</h1>
+        <div class="top-actions">
+          <button type="button" class="icon-btn" data-action="compose" aria-label="New message"></button>
+          <button type="button" class="icon-btn" data-action="import" aria-label="Import"></button>
+        </div>
+      </header>
+
+      <div id="install" class="install" hidden>
+        <p>Add Luke Messages to your home screen.</p>
+        <button type="button" id="install-go">Install</button>
+        <button type="button" class="icon-btn" id="install-hide" aria-label="Dismiss">×</button>
+      </div>
+
+      <div class="search-wrap" id="search-wrap">
+        <input id="search" type="search" placeholder="Search messages" autocomplete="off" enterkeyhint="search" />
+      </div>
+
+      <main id="main">
+        <p id="boot" class="boot">Opening your messages…</p>
+        <section id="screen-messages" class="screen"></section>
+        <section id="screen-calls" class="screen"></section>
+        <section id="screen-contacts" class="screen"></section>
+      </main>
+
+      <nav class="tabs" aria-label="Sections">
+        <button type="button" data-action="tab" data-tab="messages" aria-label="Messages"></button>
+        <button type="button" data-action="tab" data-tab="calls" aria-label="Calls"></button>
+        <button type="button" data-action="tab" data-tab="contacts" aria-label="Contacts"></button>
+      </nav>
+
+      <button type="button" id="fab" class="fab" data-action="keypad" hidden>Keypad</button>
+
+      <section id="thread" class="overlay" hidden>
+        <header class="top thread-main">
+          <button type="button" class="icon-btn" data-action="back" aria-label="Back"></button>
+          <div class="who" id="thread-who"></div>
+          <button type="button" class="icon-btn" id="thread-call" data-action="call-open" aria-label="Call"></button>
+        </header>
+        <div id="log"></div>
+        <form id="composer" class="composer">
+          <p id="composer-note">Send opens your phone’s texting app so the message goes out on your number. A copy stays here.</p>
+          <div class="composer-row">
+            <textarea id="draft" rows="1" placeholder="Text" aria-label="Message"></textarea>
+            <button type="submit">Send</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="person" class="overlay" hidden>
+        <header class="top">
+          <button type="button" class="icon-btn" data-action="back" aria-label="Back"></button>
+          <h1>Contact</h1>
+        </header>
+        <div id="person-body" class="person-body"></div>
+      </section>
+    </div>
+
+    <div id="import-sheet" class="sheet" hidden>
+      <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="import-title">
+        <div class="grab" aria-hidden="true"><span></span></div>
+        <div class="sheet-head">
+          <h2 id="import-title">Import</h2>
+          <button type="button" class="icon-btn" data-action="close-import" aria-label="Close"></button>
+        </div>
+        <p class="quiet">Luke Messages keeps what you import on this device. Nothing is uploaded.</p>
+        <p>Google Messages can’t hand its inbox to a website. Export a backup from the phone that has your texts, then choose the file here.</p>
+        <ol>
+          <li>On that Android phone, install SMS Backup &amp; Restore.</li>
+          <li>Back up messages. Back up call logs too if you want them here.</li>
+          <li>Move the XML file to this phone.</li>
+          <li>Choose the file below. You can choose more than one.</li>
+        </ol>
+        <p class="quiet">Contacts are a separate file. Export a Google CSV or vCard from contacts.google.com, or a vCard from the Contacts app.</p>
+        <div class="stack">
+          <button type="button" class="btn full" id="pick-file" data-action="pick">Choose file</button>
+          <button type="button" class="btn ghost full" id="pick-contacts" data-action="pick-contacts" hidden>Choose contacts on this phone</button>
+          <button type="button" class="btn ghost full danger" data-action="clear">Remove everything saved here</button>
+          <button type="button" class="btn ghost full" data-action="close-import">Close</button>
+        </div>
+        <p id="import-status" role="status"></p>
+      </div>
+    </div>
+
+    <div id="compose-sheet" class="sheet" hidden>
+      <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="compose-title">
+        <div class="grab" aria-hidden="true"><span></span></div>
+        <div class="sheet-head">
+          <h2 id="compose-title">New message</h2>
+          <button type="button" class="icon-btn" data-action="close-compose" aria-label="Close"></button>
+        </div>
+        <input id="compose-to" type="text" placeholder="Name or number" autocomplete="off" aria-label="Name or number" />
+        <div id="compose-results"></div>
+      </div>
+    </div>
+
+    <div id="keypad" class="sheet" hidden>
+      <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="keypad-title">
+        <div class="grab" aria-hidden="true"><span></span></div>
+        <div class="sheet-head">
+          <h2 id="keypad-title">Keypad</h2>
+          <button type="button" class="icon-btn" data-action="close-keypad" aria-label="Close"></button>
+        </div>
+        <div id="dial-display" class="dial-display is-empty">Enter a number</div>
+        <div class="keys" id="keys"></div>
+        <div class="key-actions">
+          <button type="button" class="btn ghost" data-action="dial-text">Text</button>
+          <button type="button" class="btn" data-action="dial-call">Call</button>
+          <button type="button" data-action="dial-back" aria-label="Delete digit"></button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast" role="status" hidden></div>
+    <input id="file" type="file" hidden multiple accept=".xml,.csv,.vcf,.vcard,.zip,text/xml,text/csv,text/vcard,text/x-vcard" />
+    <noscript>Luke Messages needs JavaScript to open your imported chats.</noscript>
+    <script src="parse.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
