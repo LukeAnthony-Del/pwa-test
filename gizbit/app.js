@@ -468,20 +468,36 @@ function lockGestures() {
 }
 
 function setupInstall() {
+  const button = $("install-go");
+  const note = $("install-note");
   const standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
-  if (standalone) document.body.classList.add("standalone");
+  if (standalone) {
+    document.body.classList.add("standalone");
+    button.hidden = true;
+    return;
+  }
   let deferred = null;
   window.addEventListener("beforeinstallprompt", (event) => {
     event.preventDefault();
     deferred = event;
-    $("install-go").hidden = false;
   });
-  $("install-go").addEventListener("click", async () => {
-    if (!deferred) return;
-    deferred.prompt();
-    await deferred.userChoice;
-    deferred = null;
-    $("install-go").hidden = true;
+  window.addEventListener("appinstalled", () => {
+    button.hidden = true;
+    note.hidden = true;
+  });
+  button.addEventListener("click", async () => {
+    if (deferred) {
+      deferred.prompt();
+      const choice = await deferred.userChoice;
+      deferred = null;
+      if (choice.outcome === "accepted") button.hidden = true;
+      return;
+    }
+    const iphone = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    note.hidden = false;
+    note.textContent = iphone
+      ? "Tap Share, then Add to Home Screen."
+      : "Open the browser menu, then choose Install app or Add to Home Screen.";
   });
 }
 
