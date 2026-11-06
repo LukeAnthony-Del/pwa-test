@@ -1544,6 +1544,7 @@ app.addEventListener("click", (event) => {
   if (action === "mode") {
     setFeedMode(target.dataset.mode);
   } else if (action === "screen") {
+    if (target.dataset.screen === "profile" && holdFired) return;
     closeSearch();
     if (target.dataset.screen === "feed" && screen === "feed") {
       scroller.scrollTo({ top: 0, behavior: "smooth" });
@@ -1710,6 +1711,20 @@ createBtn.addEventListener("pointerdown", (event) => {
 window.addEventListener("pointerup", clearHold);
 window.addEventListener("pointercancel", clearHold);
 createBtn.addEventListener("contextmenu", (event) => event.preventDefault());
+
+const profileBtn = document.querySelector(".profile-tab");
+profileBtn.addEventListener("pointerdown", (event) => {
+  if (event.button) return;
+  holdFired = false;
+  clearHold();
+  holdTimer = setTimeout(() => {
+    holdFired = true;
+    const button = document.querySelector("#install-hold");
+    if (button) button.hidden = false;
+    if (navigator.vibrate) navigator.vibrate(20);
+  }, 2000);
+});
+profileBtn.addEventListener("contextmenu", (event) => event.preventDefault());
 
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js");
 
