@@ -12,8 +12,8 @@ Open that URL in Chrome on your phone, then Install / Add to Home Screen. After 
 
 Install that page to your home screen. It shows texts, call history, and contacts you import from a backup. Google Messages does not let a website read the inbox directly. On the Android phone that has your messages, export an XML backup with SMS Backup & Restore (messages and, if you want them, call logs), plus a contacts CSV or vCard. Sending a text opens your phone’s messaging app so it goes out on your number. Calling opens the phone dialer. Everything you import stays in the browser on that device.
 
-**Shorts feed:** https://lukeanthony-del.github.io/pwa-test/tiktok-app/
+**Shorts feed:** https://lukeanthony-del.github.io/Tiktok.com/
 
-Install that page to your home screen. It opens on one Short. Hold the plus button for two seconds and confirm with the phone's fingerprint to unlock a feed that keeps loading YouTube Shorts. Closing the app locks that feed again, but videos you already watched stay remembered. If a previously installed copy still shows a black screen, open the page once more so the updated app can replace it.
+That app lives in https://github.com/LukeAnthony-Del/Tiktok.com. Install that page to your home screen. It opens on one Short. Hold the plus button for two seconds and confirm with the phone's fingerprint to unlock a feed that keeps loading YouTube Shorts. Closing the app locks that feed again, but videos you already watched stay remembered. If a previously installed copy still shows a black screen, open the page once more so the updated app can replace it.
 
 Repo: https://github.com/LukeAnthony-Del/pwa-test
