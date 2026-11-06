@@ -18,17 +18,22 @@
   </head>
   <body>
     <div id="app">
+      <div id="splash" class="splash">
+        <img class="splash-logo" src="icon-512.png" alt="" />
+        <img class="splash-word" src="wordmark.png" alt="TikTok" />
+      </div>
       <section id="feed" class="screen on">
         <header class="topbar">
           <div class="top-tabs">
-            <button type="button" data-action="mode" data-mode="following">Following</button>
             <button type="button" class="on" data-action="mode" data-mode="foryou">For You</button>
+            <button type="button" data-action="mode" data-mode="following">Following</button>
+            <button type="button" data-action="mode" data-mode="community">Community</button>
+            <button type="button" data-action="mode" data-mode="stem">STEM</button>
           </div>
           <button type="button" class="search-btn" data-action="search" aria-label="Search">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.25" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16.2 20.2 20.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           </button>
         </header>
-        <button type="button" id="sound" class="sound-hint" data-action="sound">Tap for sound</button>
         <button type="button" id="install-over" class="install-over" data-action="install" hidden>Install</button>
         <div id="scroller" class="scroller"></div>
       </section>
@@ -39,23 +44,35 @@
 
       <nav class="dock" aria-label="Main">
         <button type="button" class="on" data-action="screen" data-screen="feed">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.6 12 4l8 6.6V20a1 1 0 0 1-1 1h-4.6v-6.1H9.6V21H5a1 1 0 0 1-1-1v-9.4z" fill="currentColor"/></svg>
+          <span class="ico">
+            <svg class="line" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.2 10.7 12 4.2l7.8 6.5V20a1 1 0 0 1-1 1h-4.3v-5.5H9.5V21H5.2a1 1 0 0 1-1-1v-9.3z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+            <svg class="fill" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.6 10.8 12 3.6l8.4 7.2V20a1 1 0 0 1-1 1h-4.8v-6H9.4V21H4.6a1 1 0 0 1-1-1v-9.2z" fill="currentColor"/></svg>
+          </span>
           <span>Home</span>
         </button>
         <button type="button" data-action="screen" data-screen="friends">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="16.1" cy="9" r="1.9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.6 18.6c.7-2.5 2.5-3.7 4.4-3.7s3.7 1.2 4.4 3.7M13.2 14.4c1.1-.5 2.3-.6 3.3-.2 1.3.5 2.2 1.7 2.6 3.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <span class="ico">
+            <svg class="line" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="2.2" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="16" cy="9" r="1.7" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M4.6 18.4c.6-2.4 2.4-3.6 4.4-3.6s3.8 1.2 4.4 3.6M13.4 14.2c1-.4 2.1-.5 3.1-.2 1.2.5 2.1 1.6 2.5 3.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            <svg class="fill" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.1" r="2.5" fill="currentColor"/><circle cx="16.1" cy="9.1" r="2" fill="currentColor"/><path d="M3.8 18.8c.7-2.8 2.8-4.2 5.2-4.2s4.5 1.4 5.2 4.2H3.8zm9.2-4.2c1.2-.5 2.5-.5 3.6 0 1.5.6 2.5 2 3 3.8h-4.2c-.4-1.1-1.1-2-2.4-3.8z" fill="currentColor"/></svg>
+          </span>
           <span>Friends</span>
         </button>
         <button type="button" class="create" data-action="add" aria-label="Add a Short">
           <i></i><b></b><span>+</span>
         </button>
         <button type="button" data-action="screen" data-screen="inbox">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.8 7.2h14.4v9.4a1 1 0 0 1-1 1H5.8a1 1 0 0 1-1-1V7.2z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m4.8 8 7.2 5 7.2-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+          <span class="ico">
+            <svg class="line" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6.2h12a1.6 1.6 0 0 1 1.6 1.6v6.4A1.6 1.6 0 0 1 18 15.8h-4.2L10 18.6v-2.8H6a1.6 1.6 0 0 1-1.6-1.6V7.8A1.6 1.6 0 0 1 6 6.2z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8.2 11h7.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            <svg class="fill" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M6 5.6h12a2 2 0 0 1 2 2v6.6a2 2 0 0 1-2 2h-4.4L9.4 19.6v-3.4H6a2 2 0 0 1-2-2V7.6a2 2 0 0 1 2-2zm2.1 4.6h7.8v1.7H8.1v-1.7z"/></svg>
+          </span>
           <span>Inbox</span>
           <em id="inbox-dot" class="dot" hidden></em>
         </button>
         <button type="button" class="profile-tab" data-action="screen" data-screen="profile">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.1" r="2.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6.2 19c.8-2.6 2.8-4 5.8-4s5 1.4 5.8 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <span class="ico">
+            <svg class="line" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.2" r="2.7" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M6.2 18.8c.8-2.6 2.8-4 5.8-4s5 1.4 5.8 4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            <svg class="fill" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.1" fill="currentColor"/><path d="M5.4 19.2c.9-3 3.2-4.6 6.6-4.6s5.7 1.6 6.6 4.6H5.4z" fill="currentColor"/></svg>
+          </span>
           <span>Profile</span>
         </button>
       </nav>

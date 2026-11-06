@@ -1,4 +1,4 @@
-const CACHE = "tiktok-app-v9";
+const CACHE = "tiktok-app-v10";
 const ASSETS = [
   "./",
   "index.html",
@@ -9,6 +9,7 @@ const ASSETS = [
   "icon-192.png",
   "icon-512.png",
   "apple-touch-icon.png",
+  "wordmark.png",
 ];
 
 self.addEventListener("install", (event) => {

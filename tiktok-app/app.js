@@ -34,21 +34,19 @@ const SEEDS = [
   ["morgan", "the sound makes it"],
 ];
 
-const HEART = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.4c-.4 0-7.7-4.3-9.4-8.4C1.2 8.8 2.5 5.4 5.7 4.6c1.9-.5 3.7.3 5 2.1L12 8.2l1.3-1.5c1.3-1.8 3.1-2.6 5-2.1 3.2.8 4.5 4.2 3.1 7.4-1.7 4.1-9 8.4-9.4 8.4z" fill="currentColor"/></svg>';
-const HEART_LINE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19.6c-.3 0-6.6-3.7-8.1-7.2C2.7 9.6 3.8 6.7 6.5 6c1.6-.4 3.1.2 4.2 1.8L12 9.4l1.3-1.6c1.1-1.6 2.6-2.2 4.2-1.8 2.7.7 3.8 3.6 2.6 6.4-1.5 3.5-7.8 7.2-8.1 7.2z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>';
-const COMMENT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.4a7.4 7.4 0 0 0-6.4 11.1l-1.2 2.9a.7.7 0 0 0 .9.9l2.9-1.2A7.4 7.4 0 1 0 12 4.4z" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="8.7" cy="12" r="1.05" fill="currentColor"/><circle cx="12" cy="12" r="1.05" fill="currentColor"/><circle cx="15.3" cy="12" r="1.05" fill="currentColor"/></svg>';
-const BOOK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.2h10a1 1 0 0 1 1 1V20l-6-3.2L6 20V5.2a1 1 0 0 1 1-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
-const BOOK_ON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.2h10a1 1 0 0 1 1 1V20l-6-3.2L6 20V5.2a1 1 0 0 1 1-1z" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>';
-const SHARE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.8 4.2c.5-.5 1.4-.1 1.4.6v2.2c2.4.3 6.2 1.8 6.6 6.1.1.8-.8 1.2-1.3.6-1.4-1.6-3.4-2.5-5.3-2.7v2.6c0 .7-.9 1.1-1.4.6l-6.7-5.6a.8.8 0 0 1 0-1.2l6.7-5.2z" fill="currentColor"/></svg>';
+const HEART = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.2c-.4 0-7.4-4.1-9-8C1.6 8.8 3 5.6 6 4.9c1.8-.4 3.5.2 4.7 1.8L12 8.4l1.3-1.7c1.2-1.6 2.9-2.2 4.7-1.8 3 .7 4.4 3.9 3 7.3-1.6 3.9-8.6 8-9.7 8z" fill="currentColor"/></svg>';
+const HEART_LINE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19.4c-.3 0-6.4-3.6-7.8-7C3.1 9.4 4.3 6.6 6.8 6c1.5-.4 3 .2 4 1.6L12 9.2l1.2-1.6c1-1.4 2.5-2 4-1.6 2.5.6 3.7 3.4 2.6 6.4-1.4 3.4-7.5 7-8.8 7z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>';
+const COMMENT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.2a6.6 6.6 0 0 0-5.7 9.9l-1.1 2.6a.6.6 0 0 0 .8.8l2.6-1.1A6.6 6.6 0 1 0 12 5.2z" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="9" cy="11.8" r=".9" fill="currentColor"/><circle cx="12" cy="11.8" r=".9" fill="currentColor"/><circle cx="15" cy="11.8" r=".9" fill="currentColor"/></svg>';
+const BOOK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.2 4.4h9.6a1 1 0 0 1 1 1V19.6l-5.8-3.1-5.8 3.1V5.4a1 1 0 0 1 1-1z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>';
+const BOOK_ON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.2 4.2h9.6a1 1 0 0 1 1 1V20l-5.8-3.2L6.2 20V5.2a1 1 0 0 1 1-1z" fill="currentColor"/></svg>';
+const SHARE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 6.2 18.6 10 14 13.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.2 10H9.8C7 10 5.2 11.6 4.6 14.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
 const NOTE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.2V6.4l10-2v10.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="7.2" cy="17.2" r="2.1" fill="currentColor"/><circle cx="17.2" cy="15" r="2.1" fill="currentColor"/></svg>';
-const PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7.2v9.6l8.2-4.8L9 7.2z" fill="#fff"/></svg>';
 
 const app = document.querySelector("#app");
 const scroller = document.querySelector("#scroller");
 const sheet = document.querySelector("#sheet");
 const backdrop = document.querySelector("#backdrop");
 const searchLayer = document.querySelector("#search");
-const soundBtn = document.querySelector("#sound");
 const inboxDot = document.querySelector("#inbox-dot");
 
 const players = new Map();
@@ -288,7 +286,6 @@ function slideHtml(video) {
     </div>
     <div class="hit" data-action="hit"></div>
     <div class="scrim"></div>
-    <div class="pause-icon">${PLAY}</div>
     <div class="err">
       <p>This Short can't play here</p>
       <button type="button" data-action="next">Next</button>
@@ -482,7 +479,6 @@ function setActive(index) {
 
 function enableSound() {
   soundOn = true;
-  soundBtn.hidden = true;
   userPaused = false;
   slideAt(activeIndex)?.classList.remove("is-paused");
   syncOne(activeIndex);
@@ -1542,6 +1538,7 @@ app.addEventListener("click", (event) => {
   const slide = target.closest(".slide");
   const id = target.dataset.id || slide?.dataset.id || activeId();
   if (action === "mode") {
+    if (target.dataset.mode !== "foryou") return;
     setFeedMode(target.dataset.mode);
   } else if (action === "screen") {
     if (target.dataset.screen === "profile" && holdFired) return;
@@ -1555,8 +1552,6 @@ app.addEventListener("click", (event) => {
     openSearch();
   } else if (action === "close-search") {
     closeSearch();
-  } else if (action === "sound") {
-    enableSound();
   } else if (action === "like" && id) {
     toggleLike(id, false);
   } else if (action === "comment" && id) {
@@ -1751,5 +1746,10 @@ window.addEventListener("pageshow", (event) => {
 
 paintInboxDot();
 renderFeed(false);
+const splash = document.querySelector("#splash");
+setTimeout(() => {
+  splash.classList.add("hide");
+  setTimeout(() => splash.remove(), 400);
+}, 1100);
 paintScreens();
 paintInstall();

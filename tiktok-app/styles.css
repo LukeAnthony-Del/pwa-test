@@ -44,6 +44,25 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
 #feed { overflow: hidden; }
 
+.splash {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  background: #000;
+  transition: opacity .35s ease;
+}
+
+.splash.hide { opacity: 0; pointer-events: none; }
+
+.splash-logo { width: 96px; height: 96px; }
+
+.splash-word { width: min(210px, 62%); height: auto; }
+
 .topbar {
   position: absolute;
   z-index: 5;
@@ -52,7 +71,7 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   right: 0;
   display: flex;
   justify-content: center;
-  padding: calc(env(safe-area-inset-top) + 8px) 48px 0;
+  padding: calc(env(safe-area-inset-top) + 6px) 40px 0 6px;
   pointer-events: none;
   background: linear-gradient(to bottom, rgba(0, 0, 0, .45), transparent);
 }
@@ -64,9 +83,9 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   border: 0;
   background: none;
   color: rgba(255, 255, 255, .62);
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 700;
-  padding: 8px 12px 12px;
+  padding: 8px 7px 12px;
   text-shadow: 0 1px 2px rgba(0, 0, 0, .45);
 }
 
@@ -99,23 +118,6 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 }
 
 .search-btn svg { width: 26px; height: 26px; }
-
-.sound-hint {
-  position: absolute;
-  z-index: 6;
-  top: calc(env(safe-area-inset-top) + 52px);
-  left: 50%;
-  transform: translateX(-50%);
-  border: 0;
-  background: rgba(0, 0, 0, .55);
-  color: #fff;
-  border-radius: 999px;
-  padding: 7px 12px;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.sound-hint[hidden] { display: none; }
 
 .install-over {
   position: absolute;
@@ -323,7 +325,7 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
 .rail > button.on svg { color: var(--pink); }
 
-.rail > button.save.on svg { color: #fff; }
+.rail > button.save.on svg { color: #f6c945; }
 
 .avatar-wrap { position: relative; width: 48px; height: 54px; }
 
@@ -378,26 +380,6 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 }
 
 .slide.is-paused .disc, .slide:not(.is-playing) .disc { animation-play-state: paused; }
-
-.pause-icon {
-  position: absolute;
-  z-index: 4;
-  left: 50%;
-  top: 50%;
-  width: 84px;
-  height: 84px;
-  margin: -42px 0 0 -42px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, .55);
-  display: none;
-  place-items: center;
-  pointer-events: none;
-}
-
-.pause-icon svg { width: 34px; height: 34px; margin-left: 4px; }
-
-.slide.is-active.is-paused .pause-icon,
-.slide.is-active:not(.is-playing):not(.is-error) .pause-icon { display: grid; }
 
 .err {
   display: none;
@@ -480,7 +462,15 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   font-weight: 600;
 }
 
-.dock > button svg { width: 26px; height: 26px; }
+.dock .ico { position: relative; width: 26px; height: 26px; }
+
+.dock .ico svg { position: absolute; inset: 0; width: 26px; height: 26px; }
+
+.dock > button .fill { opacity: 0; }
+
+.dock > button.on .line { opacity: 0; }
+
+.dock > button.on .fill { opacity: 1; }
 
 .dock > button:not(.on) { opacity: .92; }
 
