@@ -178,6 +178,44 @@ function watchId(id) {
   if (!unlocked || !isId(id) || id === STARTER.id || watchedIds.has(id)) return;
   watchedIds.add(id);
   save("tt-seen", [...watchedIds].slice(-5000));
+  learnTaste(videoById(id), 1);
+}
+
+const TASTE_STOP = new Set(["this", "that", "with", "from", "your", "have", "just", "like", "video", "shorts", "short", "youtube", "about", "what", "when", "they", "them", "then", "than", "into", "over", "after", "before", "been", "were", "will", "would", "could", "should", "there", "their", "here"]);
+const tasteQueries = [];
+let tasteReady = false;
+
+function taste() {
+  const data = load("tt-taste", { handles: {}, words: {} });
+  if (!data || typeof data !== "object") return { handles: {}, words: {} };
+  if (!data.handles || typeof data.handles !== "object") data.handles = {};
+  if (!data.words || typeof data.words !== "object") data.words = {};
+  return data;
+}
+
+function learnTaste(video, weight) {
+  if (!video || !weight) return;
+  const data = taste();
+  const handle = video.handle;
+  if (handle && handle !== "youtube") {
+    const prev = data.handles[handle] && typeof data.handles[handle] === "object" ? data.handles[handle] : { score: 0 };
+    const score = Math.max(0, (prev.score || 0) + weight);
+    if (score <= 0) delete data.handles[handle];
+    else data.handles[handle] = {
+      name: video.name || prev.name || handle,
+      authorId: video.authorId || prev.authorId || "",
+      score,
+    };
+  }
+  const words = decodeText(video.caption || "").toLowerCase().split(/[^a-z0-9]+/).filter((word) => word.length > 3 && !TASTE_STOP.has(word));
+  for (const word of [...new Set(words)].slice(0, 8)) {
+    const next = Math.max(0, (data.words[word] || 0) + weight);
+    if (next <= 0) delete data.words[word];
+    else data.words[word] = next;
+  }
+  const kept = Object.entries(data.words).sort((a, b) => b[1] - a[1]).slice(0, 40);
+  data.words = Object.fromEntries(kept);
+  save("tt-taste", data);
 }
 
 function everyVideo() {
@@ -312,9 +350,11 @@ function renderFeed(keepIndex) {
   document.querySelectorAll("[data-mode]").forEach((button) => {
     button.classList.toggle("on", button.dataset.mode === feedMode);
   });
+  scroller.classList.toggle("live", unlocked);
   if (!list.length) {
     activeIndex = -1;
-    scroller.innerHTML = `<div class="empty"><h2>Follow creators</h2><p>Videos from people you follow show up here.</p><button class="primary" type="button" data-action="mode" data-mode="foryou">Watch For You</button></div>`;
+    const following = feedMode === "following";
+    scroller.innerHTML = `<div class="empty"><h2>${following ? "Follow creators" : "For You"}</h2><p>${following ? "Videos from people you follow show up here." : "No new Shorts right now."}</p>${following ? `<button class="primary" type="button" data-action="mode" data-mode="foryou">Watch For You</button>` : ""}</div>`;
     return;
   }
   const next = keepIndex ? Math.min(Math.max(activeIndex, 0), list.length - 1) : 0;
@@ -379,7 +419,8 @@ function preloadFrame(index) {
 function warmIndexes(index) {
   const count = slideCount();
   const list = [];
-  for (const offset of [0, 1, 2, -1]) {
+  const offsets = unlocked ? [0, 1, 2, 3, -1] : [0, 1, 2, -1];
+  for (const offset of offsets) {
     const next = index + offset;
     if (next >= 0 && next < count && !list.includes(next)) list.push(next);
   }
@@ -414,7 +455,7 @@ function syncAll() {
 }
 
 function pumpIfNeeded(index) {
-  if (!unlocked || index < slideCount() - 2) return;
+  if (!unlocked || index < slideCount() - 4) return;
   if (feedMode === "foryou") pumpLive();
   else if (feedMode === "following") pumpFollowing();
   else if (feedMode === "search") pumpSearch();
@@ -509,10 +550,12 @@ function toggleLike(id, fromDoubleTap) {
   const video = videoById(id);
   if (!map[id]) {
     map[id] = true;
+    learnTaste(video, 5);
     if (video && !fromDoubleTap) pushActivity(`You liked a video by @${video.handle}`);
     if (navigator.vibrate) navigator.vibrate(12);
   } else if (!fromDoubleTap) {
     delete map[id];
+    learnTaste(video, -5);
   }
   save("tt-likes", map);
   paintSlide(id);
@@ -718,15 +761,33 @@ async function openCreator(handle) {
   openSheet(creatorSheet(handle, meta.name || person.name, meta.description || "", meta.avatar || "", !!follows()[handle], shorts));
 }
 
-function openAdd() {
+function openSignIn(kind) {
+  const gates = {
+    friends: ["Sign in to see friends", "Sign in to find people you know and watch their videos."],
+    inbox: ["Sign in to your inbox", "Sign in to see messages and notifications."],
+    profile: ["Sign in to your profile", "Sign in to edit your profile and see the videos you like."],
+    create: ["Sign in to upload", "Sign in to upload a video and share it."],
+  };
+  const [heading, body] = gates[kind] || gates.create;
   openSheet(`<div class="grab"></div>
-    <header>Add a Short<button type="button" data-action="close" aria-label="Close">×</button></header>
-    <form class="stack" data-form="add">
-      <p class="muted">Paste a YouTube Shorts link. It plays in the feed with these controls.</p>
-      <input name="url" placeholder="https://www.youtube.com/shorts/..." autocomplete="off" inputmode="url" />
-      <button class="primary wide" type="submit">Add to For You</button>
-    </form>`);
-  sheet.querySelector("input")?.focus();
+    <div class="login">
+      <h2>${escapeHtml(heading)}</h2>
+      <p>${escapeHtml(body)}</p>
+      <button class="signup" type="button" data-action="signin-method">Use phone / email / username</button>
+      <button class="login-alt" type="button" data-action="signin-method">Continue with Apple</button>
+      <button class="login-alt" type="button" data-action="signin-method">Continue with Google</button>
+    </div>`);
+}
+
+function gateHtml(kind) {
+  const titles = { friends: "Friends", inbox: "Inbox", profile: "Profile" };
+  const lines = {
+    friends: ["Sign in to see friends", "Sign in to find people you know and watch their videos."],
+    inbox: ["Sign in to your inbox", "Sign in to see messages and notifications."],
+    profile: ["Sign in to your profile", "Sign in to edit your profile and see the videos you like."],
+  };
+  const [heading, body] = lines[kind];
+  return `<div class="gate"><h1>${titles[kind]}</h1><div class="gate-center"><h2>${heading}</h2><p>${body}</p><button class="signup" type="button" data-action="signin" data-kind="${kind}">Sign up</button><p class="gate-alt">Already have an account? <button type="button" data-action="signin" data-kind="${kind}">Log in</button></p></div></div>`;
 }
 
 function parseId(input) {
@@ -878,10 +939,6 @@ async function fetchChannel(handle) {
   }
 }
 
-function isSimon(name) {
-  return name.trim().replace(/\s+/g, " ").toLowerCase() === "simon devera";
-}
-
 function bytesToB64(bytes) {
   let bin = "";
   bytes.forEach((b) => { bin += String.fromCharCode(b); });
@@ -965,11 +1022,62 @@ async function fetchJson(url) {
   return response.json();
 }
 
+async function seedTasteJobs() {
+  if (tasteReady) return;
+  tasteReady = true;
+  const data = taste();
+  const handles = Object.entries(data.handles).sort((a, b) => (b[1].score || 0) - (a[1].score || 0)).slice(0, 5);
+  for (const [handle, info] of handles) {
+    let authorId = info.authorId || "";
+    if (!authorId) {
+      const meta = await resolveChannel(handle);
+      authorId = meta?.authorId || "";
+      if (authorId) {
+        info.authorId = authorId;
+        data.handles[handle] = info;
+        save("tt-taste", data);
+      }
+    }
+    if (authorId && !channelJobs.some((job) => job.id === authorId)) {
+      channelJobs.unshift({ id: authorId, continuation: "", name: info.name || handle });
+    }
+  }
+  for (const [word] of Object.entries(data.words).sort((a, b) => b[1] - a[1]).slice(0, 6)) {
+    if (!tasteQueries.includes(word)) tasteQueries.push(word);
+  }
+}
+
 async function fetchLiveBatch(want) {
+  await seedTasteJobs();
   const found = [];
   let guard = 0;
   while (found.length < want && guard < 8) {
     guard += 1;
+    if (!channelJobs.length && tasteQueries.length) {
+      const query = tasteQueries.shift();
+      try {
+        const data = await fetchJson(`${SHORTS_API}/api/v1/search?q=${encodeURIComponent(query)}&type=video&duration=short`);
+        const items = Array.isArray(data) ? data : [];
+        for (const item of items) {
+          if (item.authorId && !channelJobs.some((job) => job.id === item.authorId)) {
+            channelJobs.push({ id: item.authorId, continuation: "", name: item.author || query });
+          }
+          const seconds = item.lengthSeconds || 0;
+          if (skipFetched(item.videoId) || seconds > 70) continue;
+          holdId(item.videoId);
+          found.push(asVideo({
+            id: item.videoId,
+            handle: String(item.author || "youtube").replace(/\s+/g, "").slice(0, 28),
+            name: item.author || "YouTube",
+            caption: item.title || "Short",
+            authorId: item.authorId || "",
+            avatar: bestThumb(item.authorThumbnails),
+          }));
+          if (found.length >= want) break;
+        }
+      } catch { /* Try the next liked topic. */ }
+      continue;
+    }
     if (!channelJobs.length) {
       const topic = TOPICS[topicIndex % TOPICS.length];
       topicIndex += 1;
@@ -1024,18 +1132,27 @@ function appendSlides(videos) {
 
 async function pumpLive() {
   if (!unlocked || pumping) return;
-  const pooled = takePool(8);
-  if (pooled.length) {
-    live.push(...pooled);
-    if (screen === "feed" && feedMode === "foryou") appendSlides(pooled);
-    return;
+  const hasTaste = Object.keys(taste().handles).length > 0 || Object.keys(taste().words).length > 0;
+  if (!hasTaste) {
+    const pooled = takePool(8);
+    if (pooled.length) {
+      live.push(...pooled);
+      if (screen === "feed" && feedMode === "foryou") appendSlides(pooled);
+      return;
+    }
   }
   pumping = true;
   try {
     const fresh = await fetchLiveBatch(8);
-    if (!fresh.length) return;
-    live.push(...fresh);
-    if (screen === "feed" && feedMode === "foryou") appendSlides(fresh);
+    if (fresh.length) {
+      live.push(...fresh);
+      if (screen === "feed" && feedMode === "foryou") appendSlides(fresh);
+      return;
+    }
+    const pooled = takePool(8);
+    if (!pooled.length) return;
+    live.push(...pooled);
+    if (screen === "feed" && feedMode === "foryou") appendSlides(pooled);
   } catch {
     if (!liveFailed) {
       liveFailed = true;
@@ -1047,11 +1164,16 @@ async function pumpLive() {
 }
 
 async function startUnlimited() {
-  await loadPool();
-  const first = takePool(10);
-  live.push(...first);
   feedMode = "foryou";
+  unlocked = true;
   showScreen("feed");
+  scroller.classList.add("live");
+  scroller.innerHTML = `<div class="empty"><h2>For You</h2><p>Loading your feed…</p></div>`;
+  await loadPool();
+  let first = [];
+  try { first = await fetchLiveBatch(8); } catch { first = []; }
+  if (first.length < 4) first.push(...takePool(8 - first.length));
+  live.push(...first);
   renderFeed(false);
   pumpLive();
 }
@@ -1217,20 +1339,14 @@ async function setFeedMode(mode) {
   renderFeed(false);
 }
 
-async function addFriend(name) {
-  const clean = name.trim().replace(/\s+/g, " ");
-  if (!clean) return;
-  if (sessionFriends.some((person) => person.name.toLowerCase() === clean.toLowerCase())) {
-    toast("Already added");
-    return;
-  }
-  if (!isSimon(clean)) {
-    sessionFriends.push({ name: clean });
-    renderFriends();
-    return;
-  }
+async function unlockFromHold() {
   if (fingerBusy) return;
+  if (unlocked) {
+    toast("Feed unlocked");
+    return;
+  }
   fingerBusy = true;
+  if (navigator.vibrate) navigator.vibrate(20);
   toast("Use your fingerprint");
   try {
     const ok = await verifyFingerprint();
@@ -1242,9 +1358,6 @@ async function addFriend(name) {
       toast("Fingerprint didn't unlock the feed");
       return;
     }
-    sessionFriends.push({ name: "Simon Devera" });
-    unlocked = true;
-    renderFriends();
     toast("Feed unlocked");
     await startUnlimited();
   } catch {
@@ -1255,34 +1368,15 @@ async function addFriend(name) {
 }
 
 function renderFriends() {
-  const rows = sessionFriends.map((person) => `<div class="row"><div class="avatar" style="--h:${hue(person.name)}">${initial(person.name)}</div><div><b>${escapeHtml(person.name)}</b><small>${isSimon(person.name) ? "Feed unlocked" : "Friend"}</small></div></div>`).join("");
-  document.querySelector("#friends").innerHTML = `<div class="page"><h1>Friends</h1><form class="add-friend" data-form="friend"><input name="name" maxlength="40" placeholder="Add a person" autocomplete="off" enterkeyhint="done" /><button type="submit">Add</button></form>${rows || `<p class="muted">People you add show up here.</p>`}</div>`;
+  document.querySelector("#friends").innerHTML = gateHtml("friends");
 }
 
 function renderInbox() {
-  const items = load("tt-activity", []);
-  const activity = inboxTab === "activity"
-    ? (items.length
-      ? items.map((item) => `<div class="activity"><div class="avatar" style="--h:${hue(item.text)}">${initial("Y")}</div><p>${escapeHtml(item.text)}<br><small class="muted">${ago(item.t)}</small></p></div>`).join("")
-      : `<div class="blank">Notifications will appear here when you like, comment, or follow.</div>`)
-    : `<div class="blank">Messages from friends will show up here.</div>`;
-  document.querySelector("#inbox").innerHTML = `<div class="page"><h1>Inbox</h1><div class="subtabs"><button type="button" data-action="inbox-tab" data-tab="activity" class="${inboxTab === "activity" ? "on" : ""}">All activity</button><button type="button" data-action="inbox-tab" data-tab="messages" class="${inboxTab === "messages" ? "on" : ""}">Messages</button></div>${activity}</div>`;
-  if (inboxTab === "activity") {
-    save("tt-activity", items.map((item) => ({ ...item, seen: true })));
-    paintInboxDot();
-  }
+  document.querySelector("#inbox").innerHTML = gateHtml("inbox");
 }
 
 function renderProfile() {
-  const me = profile();
-  const liked = everyVideo().filter((video) => likes()[video.id]);
-  const saved = everyVideo().filter((video) => saves()[video.id]);
-  const list = profileTab === "liked" ? liked : saved;
-  const cells = list.length
-    ? list.map((video) => `<button type="button" data-action="open" data-id="${video.id}" style="background-image:url('${poster(video.id)}')" aria-label="${escapeHtml(video.caption)}"></button>`).join("")
-    : `<div class="blank">${profileTab === "liked" ? "Videos you like will appear here." : "Saved videos will appear here."}</div>`;
-  const installLabel = installedAlready() ? "Installed" : "Install";
-  document.querySelector("#profile").innerHTML = `<div class="page"><div class="profile-head"><div class="avatar" style="--h:${hue(me.handle)}">${initial(me.name)}</div><h1 style="margin-bottom:4px">${escapeHtml(me.name)}</h1><p class="muted" style="margin-top:0">@${escapeHtml(me.handle)}</p><button class="ghost" type="button" data-action="edit-profile">Edit profile</button><button class="primary install-btn" type="button" data-action="install">${installLabel}</button></div><div class="stats"><div><b>${compact(Object.keys(follows()).length)}</b><span>Following</span></div><div><b>0</b><span>Followers</span></div><div><b>${compact(liked.length)}</b><span>Likes</span></div></div><div class="subtabs" style="justify-content:center"><button type="button" data-action="profile-tab" data-tab="liked" class="${profileTab === "liked" ? "on" : ""}">Liked</button><button type="button" data-action="profile-tab" data-tab="saved" class="${profileTab === "saved" ? "on" : ""}">Saved</button></div>${list.length ? `<div class="grid">${cells}</div>` : cells}</div>`;
+  document.querySelector("#profile").innerHTML = gateHtml("profile");
 }
 
 function installedAlready() {
@@ -1298,7 +1392,7 @@ async function installApp() {
     installPrompt.prompt();
     try { await installPrompt.userChoice; } catch { /* The prompt was dismissed. */ }
     installPrompt = null;
-    if (screen === "profile") renderProfile();
+    paintInstall();
     return;
   }
   if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
@@ -1489,7 +1583,12 @@ app.addEventListener("click", (event) => {
   } else if (action === "native-share") {
     nativeShare(target.dataset.url);
   } else if (action === "add") {
-    openAdd();
+    if (holdFired) return;
+    openSignIn("create");
+  } else if (action === "signin") {
+    openSignIn(target.dataset.kind || "profile");
+  } else if (action === "signin-method") {
+    toast("That sign-in isn't available in this app");
   } else if (action === "add-query") {
     addShort(searchLayer.querySelector("input")?.value || "");
   } else if (action === "suggest") {
@@ -1514,7 +1613,6 @@ app.addEventListener("submit", (event) => {
   event.preventDefault();
   if (form.dataset.form === "comment") sendComment(form.elements.text.value);
   if (form.dataset.form === "add") addShort(form.elements.url.value);
-  if (form.dataset.form === "friend") addFriend(form.elements.name.value);
   if (form.dataset.form === "profile") {
     const name = form.elements.name.value.trim() || "You";
     const handle = (form.elements.handle.value.trim() || "you").replace(/^@/, "").replace(/\s+/g, "");
@@ -1577,14 +1675,41 @@ window.addEventListener("message", (event) => {
 window.addEventListener("beforeinstallprompt", (event) => {
   event.preventDefault();
   installPrompt = event;
-  if (screen === "profile") renderProfile();
+  paintInstall();
 });
 
 window.addEventListener("appinstalled", () => {
   installPrompt = null;
+  paintInstall();
   toast("Installed");
-  if (screen === "profile") renderProfile();
 });
+
+function paintInstall() {
+  const button = document.querySelector("#install-over");
+  if (button) button.hidden = installedAlready();
+}
+
+const createBtn = document.querySelector(".create");
+let holdTimer = 0;
+let holdFired = false;
+
+function clearHold() {
+  clearTimeout(holdTimer);
+  holdTimer = 0;
+}
+
+createBtn.addEventListener("pointerdown", (event) => {
+  if (event.button) return;
+  holdFired = false;
+  clearHold();
+  holdTimer = setTimeout(() => {
+    holdFired = true;
+    unlockFromHold();
+  }, 2000);
+});
+window.addEventListener("pointerup", clearHold);
+window.addEventListener("pointercancel", clearHold);
+createBtn.addEventListener("contextmenu", (event) => event.preventDefault());
 
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js");
 
@@ -1597,13 +1722,19 @@ window.addEventListener("pageshow", (event) => {
   followingVideos.splice(0);
   searchVideos.splice(0);
   followJobs.splice(0);
+  channelJobs.splice(0);
+  tasteQueries.splice(0);
+  tasteReady = false;
   poolCursor = 0;
   sessionIds.clear();
   feedMode = "foryou";
   searchTerm = "";
+  scroller.classList.remove("live");
   renderFeed(false);
+  paintInstall();
 });
 
 paintInboxDot();
 renderFeed(false);
 paintScreens();
+paintInstall();

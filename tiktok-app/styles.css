@@ -117,6 +117,24 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
 .sound-hint[hidden] { display: none; }
 
+.install-over {
+  position: absolute;
+  z-index: 6;
+  left: 50%;
+  top: calc(env(safe-area-inset-top) + 58px);
+  transform: translateX(-50%);
+  border: 0;
+  border-radius: 4px;
+  background: var(--pink);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 8px 22px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .4);
+}
+
+.install-over[hidden] { display: none; }
+
 .scroller {
   position: absolute;
   inset: 0;
@@ -125,7 +143,12 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   scrollbar-width: none;
   overscroll-behavior: none;
   touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
 }
+
+.scroller.live { scroll-behavior: smooth; }
+
+.scroller.live .slide { scroll-snap-stop: normal; }
 
 .scroller::-webkit-scrollbar { display: none; }
 
@@ -452,6 +475,9 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   width: 48px;
   height: 30px;
   margin-bottom: 12px;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 .create i, .create b, .create span {
@@ -480,6 +506,94 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 }
 
 .page h1 { margin: 0 0 14px; font-size: 24px; letter-spacing: -.03em; }
+
+.gate {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: calc(env(safe-area-inset-top) + 14px) 0 var(--dock);
+  background: #000;
+}
+
+.gate h1 {
+  margin: 0;
+  text-align: center;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.gate-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 40px 72px;
+}
+
+.gate-center h2 {
+  margin: 0 0 10px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+
+.gate-center > p {
+  margin: 0 0 22px;
+  max-width: 280px;
+  color: rgba(255, 255, 255, .6);
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.signup {
+  width: min(100%, 320px);
+  height: 48px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--pink);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.gate-alt {
+  margin: 18px 0 0;
+  color: rgba(255, 255, 255, .78);
+  font-size: 15px;
+}
+
+.gate-alt button {
+  border: 0;
+  background: none;
+  color: var(--pink);
+  font-weight: 700;
+  padding: 0;
+}
+
+.login {
+  display: grid;
+  gap: 10px;
+  padding: 8px 16px 28px;
+  text-align: center;
+}
+
+.login h2 { margin: 6px 0 0; font-size: 22px; }
+
+.login > p { margin: 0 0 8px; color: rgba(255, 255, 255, .62); font-size: 15px; }
+
+.login .signup { width: 100%; }
+
+.login-alt {
+  height: 48px;
+  border: 0;
+  border-radius: 4px;
+  background: #2a2a2a;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
 
 .add-friend { display: flex; gap: 8px; margin: 0 0 18px; }
 
