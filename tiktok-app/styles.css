@@ -59,9 +59,9 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
 .splash.hide { opacity: 0; pointer-events: none; }
 
-.splash-logo { width: 96px; height: 96px; }
+.splash-logo { width: 168px; height: 168px; }
 
-.splash-word { width: min(210px, 62%); height: auto; }
+.splash-word { width: min(300px, 82%); height: auto; }
 
 .topbar {
   position: absolute;
@@ -195,13 +195,10 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   left: 0;
   right: 0;
   top: 0;
-  height: 86px;
+  height: 120px;
   pointer-events: none;
-  opacity: 0;
-  background: linear-gradient(#000 0 42%, transparent);
+  background: linear-gradient(#000 0 58%, transparent);
 }
-
-.slide.is-playing .stage::before { opacity: 1; }
 
 .poster, .stage iframe, .holder {
   position: absolute;
@@ -221,10 +218,13 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
 .stage iframe {
   z-index: 0;
+  opacity: 0;
   transform: scale(1.32);
   transform-origin: center center;
   pointer-events: none;
 }
+
+.slide.is-playing .stage iframe { opacity: 1; }
 
 .hit {
   position: absolute;

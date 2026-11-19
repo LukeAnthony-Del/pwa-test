@@ -35,12 +35,11 @@ const SEEDS = [
 ];
 
 const HEART = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.2c-.4 0-7.4-4.1-9-8C1.6 8.8 3 5.6 6 4.9c1.8-.4 3.5.2 4.7 1.8L12 8.4l1.3-1.7c1.2-1.6 2.9-2.2 4.7-1.8 3 .7 4.4 3.9 3 7.3-1.6 3.9-8.6 8-9.7 8z" fill="currentColor"/></svg>';
-const HEART_LINE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19.4c-.3 0-6.4-3.6-7.8-7C3.1 9.4 4.3 6.6 6.8 6c1.5-.4 3 .2 4 1.6L12 9.2l1.2-1.6c1-1.4 2.5-2 4-1.6 2.5.6 3.7 3.4 2.6 6.4-1.4 3.4-7.5 7-8.8 7z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>';
-const COMMENT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.2a6.6 6.6 0 0 0-5.7 9.9l-1.1 2.6a.6.6 0 0 0 .8.8l2.6-1.1A6.6 6.6 0 1 0 12 5.2z" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="9" cy="11.8" r=".9" fill="currentColor"/><circle cx="12" cy="11.8" r=".9" fill="currentColor"/><circle cx="15" cy="11.8" r=".9" fill="currentColor"/></svg>';
-const BOOK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.2 4.4h9.6a1 1 0 0 1 1 1V19.6l-5.8-3.1-5.8 3.1V5.4a1 1 0 0 1 1-1z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>';
-const BOOK_ON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.2 4.2h9.6a1 1 0 0 1 1 1V20l-5.8-3.2L6.2 20V5.2a1 1 0 0 1 1-1z" fill="currentColor"/></svg>';
-const SHARE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 6.2 18.6 10 14 13.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.2 10H9.8C7 10 5.2 11.6 4.6 14.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
-const NOTE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.2V6.4l10-2v10.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="7.2" cy="17.2" r="2.1" fill="currentColor"/><circle cx="17.2" cy="15" r="2.1" fill="currentColor"/></svg>';
+const COMMENT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 4.2a7.3 7.3 0 0 0-6.4 10.8l-1.2 3a.7.7 0 0 0 .9.9l3-1.2A7.3 7.3 0 1 0 12 4.2zM8.5 11.1a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3zm3.5 0a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3zm3.5 0a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3z"/></svg>';
+const BOOK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.2 4.2h9.6a1 1 0 0 1 1 1V20l-5.8-3.2L6.2 20V5.2a1 1 0 0 1 1-1z" fill="currentColor"/></svg>';
+const BOOK_ON = BOOK;
+const SHARE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.4 4.7c.5-.4 1.3-.1 1.3.6v2.2c2.4.2 5.8 1.6 6.2 5.5.1.8-.8 1.2-1.3.6-1.3-1.5-3.2-2.3-4.9-2.5v2.3c0 .7-.8 1-1.3.6L7.6 11a.85.85 0 0 1 0-1.3l5.8-5z"/></svg>';
+const NOTE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 6.2v9.2a3.1 3.1 0 1 1-1.6-2.7V8.2l8.4-1.7v7.1a3.1 3.1 0 1 1-1.6-2.7V5.1L9 6.2z"/></svg>';
 
 const app = document.querySelector("#app");
 const scroller = document.querySelector("#scroller");
@@ -300,9 +299,9 @@ function slideHtml(video) {
         <button class="avatar${photo}" type="button" data-action="creator" data-handle="${escapeHtml(video.handle)}" aria-label="${escapeHtml(video.name)}">${initial(video.name)}</button>
         <button class="plus" type="button" data-action="follow" data-handle="${escapeHtml(video.handle)}" aria-label="Follow">+</button>
       </div>
-      <button type="button" data-action="like" class="${liked ? "on" : ""}" aria-label="Like">${liked ? HEART : HEART_LINE}<span class="like-count">${compact(video.likes + (liked ? 1 : 0))}</span></button>
+      <button type="button" data-action="like" class="${liked ? "on" : ""}" aria-label="Like">${HEART}<span class="like-count">${compact(video.likes + (liked ? 1 : 0))}</span></button>
       <button type="button" data-action="comment" aria-label="Comments">${COMMENT}<span class="comment-count">${compact(video.comments + (comments()[video.id] || []).length)}</span></button>
-      <button type="button" data-action="save" class="save${saved ? " on" : ""}" aria-label="Save">${saved ? BOOK_ON : BOOK}<span class="save-count">${compact(video.saves + (saved ? 1 : 0))}</span></button>
+      <button type="button" data-action="save" class="save${saved ? " on" : ""}" aria-label="Save">${BOOK}<span class="save-count">${compact(video.saves + (saved ? 1 : 0))}</span></button>
       <button type="button" data-action="share" aria-label="Share">${SHARE}<span>${compact(video.shares)}</span></button>
       <div class="disc" style="background-image:url('${poster(video.id)}')" aria-hidden="true"></div>
     </div>
@@ -516,11 +515,9 @@ function paintSlide(id) {
     const saved = !!saves()[id];
     const likeBtn = slide.querySelector("[data-action='like']");
     likeBtn.classList.toggle("on", liked);
-    likeBtn.querySelector("svg").outerHTML = liked ? HEART : HEART_LINE;
     likeBtn.querySelector(".like-count").textContent = compact(video.likes + (liked ? 1 : 0));
     const saveBtn = slide.querySelector("[data-action='save']");
     saveBtn.classList.toggle("on", saved);
-    saveBtn.querySelector("svg").outerHTML = saved ? BOOK_ON : BOOK;
     saveBtn.querySelector(".save-count").textContent = compact(video.saves + (saved ? 1 : 0));
     slide.querySelector(".comment-count").textContent = compact(video.comments + (comments()[id] || []).length);
     const followed = !!follows()[video.handle];

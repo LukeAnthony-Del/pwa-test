@@ -1,4 +1,4 @@
-const CACHE = "tiktok-app-v10";
+const CACHE = "tiktok-app-v11";
 const ASSETS = [
   "./",
   "index.html",
